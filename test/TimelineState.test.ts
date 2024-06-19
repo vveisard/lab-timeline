@@ -7,9 +7,9 @@ import {
 } from "../source/code/index.ts";
 
 describe("TimelineState.update", () => {
-  it("happily completes track and timeline", () => {
+  it("happily completes clip and timeline", () => {
     const timelineParams: TimelineParams = {
-      tracks: [
+      clips: [
         {
           startTime: 0,
           endTime: 1,
@@ -28,14 +28,14 @@ describe("TimelineState.update", () => {
     expect(finalTimelineState).not.toBe(baseTimelineState);
     expect(finalTimelineState!.status).toBe(TimeStatus.Completed);
 
-    expect(finalTimelineState!.tracks[0].status).toBe(TimeStatus.Completed);
-    expect(finalTimelineState!.tracks[0].time.runCount).toBe(1);
-    expect(finalTimelineState!.tracks[0].time.runTime).toBe(1);
+    expect(finalTimelineState!.clips[0].status).toBe(TimeStatus.Completed);
+    expect(finalTimelineState!.clips[0].time.runCount).toBe(1);
+    expect(finalTimelineState!.clips[0].time.runTime).toBe(1);
   });
 
-  it("happily completes track 0, continues track 1, and continues timeline", () => {
+  it("happily completes clip 0, continues clip 1, and continues timeline", () => {
     const timelineParams: TimelineParams = {
-      tracks: [
+      clips: [
         {
           startTime: 0,
           endTime: 1,
@@ -58,18 +58,18 @@ describe("TimelineState.update", () => {
     expect(finalTimelineState).not.toBe(baseTimelineState);
     expect(finalTimelineState!.status).toBe(TimeStatus.Running);
 
-    expect(finalTimelineState!.tracks[0].status).toBe(TimeStatus.Completed);
-    expect(finalTimelineState!.tracks[0].time.runCount).toBe(1);
-    expect(finalTimelineState!.tracks[0].time.runTime).toBe(1);
+    expect(finalTimelineState!.clips[0].status).toBe(TimeStatus.Completed);
+    expect(finalTimelineState!.clips[0].time.runCount).toBe(1);
+    expect(finalTimelineState!.clips[0].time.runTime).toBe(1);
 
-    expect(finalTimelineState!.tracks[1].status).toBe(TimeStatus.Running);
-    expect(finalTimelineState!.tracks[1].time.runCount).toBe(1);
-    expect(finalTimelineState!.tracks[1].time.runTime).toBe(1);
+    expect(finalTimelineState!.clips[1].status).toBe(TimeStatus.Running);
+    expect(finalTimelineState!.clips[1].time.runCount).toBe(1);
+    expect(finalTimelineState!.clips[1].time.runTime).toBe(1);
   });
 
   it("sadly throws when params mismatched", () => {
     const timelineParams: TimelineParams = {
-      tracks: [
+      clips: [
         {
           startTime: 0,
           endTime: 1,

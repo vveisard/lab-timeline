@@ -25,25 +25,25 @@ interface TimeState {
 }
 
 /**
- * Params for a track in a timeline.
+ * Params for a clip in a timeline.
  */
-interface TrackParams {
+interface ClipParams {
   /**
-   * Time (wrt the timeline) when the track should start.
+   * Time (wrt the timeline) when the clip should start.
    */
   readonly startTime: number;
 
   /**
-   * Time (wrt timeline) when the track should end.
-   * ie, the time (greater or equals) when the track should start.
+   * Time (wrt timeline) when the clip should end.
+   * ie, the time (greater or equals) when the clip should start.
    */
   readonly endTime: number;
 }
 
 /**
- * State for a track in a timeline.
+ * State for a clip in a timeline.
  */
-interface TrackState {
+interface ClipState {
   readonly status: TimeStatus;
 
   readonly time: TimeState;
@@ -54,9 +54,9 @@ interface TrackState {
  */
 interface TimelineParams {
   /**
-   * Parameters for tracks in this timeline, by track index.
+   * Parameters for clips in this timeline, by clip index.
    */
-  readonly tracks: Array<TrackParams>;
+  readonly clips: Array<ClipParams>;
 }
 
 // @region-start
@@ -68,19 +68,19 @@ interface TimelineState {
   readonly status: TimeStatus;
   readonly time: TimeState;
   /**
-   * State for tracks in this timeline, by track index.
+   * State for clips in this timeline, by clip index.
    */
-  readonly tracks: Array<TrackState>;
+  readonly clips: Array<ClipState>;
 }
 
 /**
  * Functions for {@link TimelineState}.
  */
 namespace TimelineState {
-  export function create(trackAmount: number): TimelineState {
-    const trackStates = new Array(trackAmount);
-    for (let i = 0; i < trackAmount; i++) {
-      trackStates[i] = {
+  export function create(clipAmount: number): TimelineState {
+    const clipStates = new Array(clipAmount);
+    for (let i = 0; i < clipAmount; i++) {
+      clipStates[i] = {
         status: TimeStatus.None,
         time: {
           runningTime: null,
@@ -95,12 +95,12 @@ namespace TimelineState {
         runTime: null,
         runCount: null,
       },
-      tracks: trackStates,
+      clips: clipStates,
     };
   }
 
   /**
-   * Update state of timeline, including all tracks.
+   * Update state of timeline, including all clips.
    * Immutable state update.
    * @param deltaTime amount of time to increment all time by.
    * @returns next timeline state, or `undefined` if no-op.
@@ -111,15 +111,15 @@ namespace TimelineState {
     deltaTime: number
   ): TimelineState | undefined {
     // TODO consider using draft library (immer or structura) for immutable state updates
-    // TODO refactor each operation to its own function (advanceTimelineTime, updateTrack, advanceTrackTime, etc)
+    // TODO refactor each operation to its own function (advanceTimelineTime, updateClip, advanceClipTime, etc)
 
     if (deltaTime === 0) {
       return undefined;
     }
 
-    if (baseTimelineState.tracks.length !== params.tracks.length) {
+    if (baseTimelineState.clips.length !== params.clips.length) {
       throw new Error(
-        `Invalid argument! track count in params and state are mismatched.`
+        `Invalid argument! clip count in params and state are mismatched.`
       );
     }
 
@@ -148,20 +148,20 @@ namespace TimelineState {
       },
     };
 
-    // update tracks
+    // update clips
     for (
-      let iTrackIndex = 0;
-      iTrackIndex < baseTimelineState.tracks.length;
-      iTrackIndex++
+      let iClipIndex = 0;
+      iClipIndex < baseTimelineState.clips.length;
+      iClipIndex++
     ) {
-      const iTrackParams = params.tracks[iTrackIndex];
-      const iBaseTrackState = baseTimelineState.tracks[iTrackIndex];
-      let iVarTrackState = iBaseTrackState;
+      const iClipParams = params.clips[iClipIndex];
+      const iBaseClipState = baseTimelineState.clips[iClipIndex];
+      let iVarClipState = iBaseClipState;
 
-      // start track
-      if (iVarTrackState.status === TimeStatus.None) {
-        if (varTimelineState.time.runTime! >= iTrackParams.startTime) {
-          iVarTrackState = {
+      // start clip
+      if (iVarClipState.status === TimeStatus.None) {
+        if (varTimelineState.time.runTime! >= iClipParams.startTime) {
+          iVarClipState = {
             status: TimeStatus.Running,
             time: {
               runTime: 0,
@@ -171,51 +171,51 @@ namespace TimelineState {
 
           varTimelineState = {
             ...varTimelineState,
-            tracks: [
-              ...varTimelineState.tracks.slice(0, iTrackIndex),
-              iVarTrackState,
-              ...varTimelineState.tracks.slice(iTrackIndex + 1),
+            clips: [
+              ...varTimelineState.clips.slice(0, iClipIndex),
+              iVarClipState,
+              ...varTimelineState.clips.slice(iClipIndex + 1),
             ],
           };
         }
       }
 
-      // run track
-      if (iVarTrackState.status === TimeStatus.Running) {
-        // advance track time
-        iVarTrackState = {
-          ...iVarTrackState,
+      // run clip
+      if (iVarClipState.status === TimeStatus.Running) {
+        // advance clip time
+        iVarClipState = {
+          ...iVarClipState,
           time: {
-            ...iVarTrackState.time,
-            runTime: iVarTrackState.time.runTime! + deltaTime,
-            runCount: iVarTrackState.time.runCount! + 1,
+            ...iVarClipState.time,
+            runTime: iVarClipState.time.runTime! + deltaTime,
+            runCount: iVarClipState.time.runCount! + 1,
           },
         };
 
-        // complete track
-        if (varTimelineState.time.runTime! >= iTrackParams.endTime) {
-          iVarTrackState = {
-            ...iVarTrackState,
+        // complete clip
+        if (varTimelineState.time.runTime! >= iClipParams.endTime) {
+          iVarClipState = {
+            ...iVarClipState,
             status: TimeStatus.Completed,
           };
         }
 
         varTimelineState = {
           ...varTimelineState,
-          tracks: [
-            ...varTimelineState.tracks.slice(0, iTrackIndex),
-            iVarTrackState,
-            ...varTimelineState.tracks.slice(iTrackIndex + 1),
+          clips: [
+            ...varTimelineState.clips.slice(0, iClipIndex),
+            iVarClipState,
+            ...varTimelineState.clips.slice(iClipIndex + 1),
           ],
         };
       }
     }
 
     // complete timeline if
-    // - every track is completed
+    // - every clip is completed
     if (
-      varTimelineState.tracks.every(
-        (iTrackState) => iTrackState.status === TimeStatus.Completed
+      varTimelineState.clips.every(
+        (iClipState) => iClipState.status === TimeStatus.Completed
       )
     ) {
       varTimelineState = {
@@ -255,47 +255,47 @@ interface TimelineWorld {
  * Functions for {@link TimelineWorld}.
  */
 namespace TimelineWorld {
-  export function create(trackParams: Array<TrackParams>): TimelineWorld {
-    // validate tracks
-    for (let i = 0; i < trackParams.length; i++) {
-      // TODO move to "validateTrackParams" function
-      const iTrackParam = trackParams[i];
+  export function create(clipParams: Array<ClipParams>): TimelineWorld {
+    // validate clips
+    for (let i = 0; i < clipParams.length; i++) {
+      // TODO move to "validateClipParams" function
+      const iClipParam = clipParams[i];
 
-      if (iTrackParam.endTime < iTrackParam.startTime) {
+      if (iClipParam.endTime < iClipParam.startTime) {
         throw new Error(
-          `Invalid argument! Track at index ${i}: endTime < startTime`
+          `Invalid argument! Clip at index ${i}: endTime < startTime`
         );
       }
 
-      if (iTrackParam.startTime < 0) {
-        throw new Error(`Invalid argument! Track at index ${i}: startTime < 0`);
+      if (iClipParam.startTime < 0) {
+        throw new Error(`Invalid argument! Clip at index ${i}: startTime < 0`);
       }
 
-      if (iTrackParam.endTime < 0) {
-        throw new Error(`Invalid argument! Track at index ${i}: endTime < 0`);
+      if (iClipParam.endTime < 0) {
+        throw new Error(`Invalid argument! Clip at index ${i}: endTime < 0`);
       }
 
-      if (Number.isNaN(iTrackParam.startTime)) {
+      if (Number.isNaN(iClipParam.startTime)) {
         throw new Error(
-          `Invalid argument! Track at index ${i}: startTime Number.isNaN`
+          `Invalid argument! Clip at index ${i}: startTime Number.isNaN`
         );
       }
 
-      if (Number.isNaN(iTrackParam.endTime)) {
+      if (Number.isNaN(iClipParam.endTime)) {
         throw new Error(
-          `Invalid argument! Track at index ${i}: endTime Number.isNaN`
+          `Invalid argument! Clip at index ${i}: endTime Number.isNaN`
         );
       }
 
-      if (!Number.isFinite(iTrackParam.startTime)) {
+      if (!Number.isFinite(iClipParam.startTime)) {
         throw new Error(
-          `Invalid argument! Track at index ${i}: startTime !Number.isFinite`
+          `Invalid argument! Clip at index ${i}: startTime !Number.isFinite`
         );
       }
 
-      if (!Number.isFinite(iTrackParam.endTime)) {
+      if (!Number.isFinite(iClipParam.endTime)) {
         throw new Error(
-          `Invalid argument! Track at index ${i}: endTime !Number.isFinite`
+          `Invalid argument! Clip at index ${i}: endTime !Number.isFinite`
         );
       }
 
@@ -303,9 +303,9 @@ namespace TimelineWorld {
     }
 
     return {
-      state: TimelineState.create(trackParams.length),
+      state: TimelineState.create(clipParams.length),
       params: {
-        tracks: trackParams,
+        clips: clipParams,
       },
     };
   }
@@ -315,4 +315,4 @@ export { TimelineWorld };
 
 // @region-end
 
-export { TimeStatus, type TrackParams, type TimeState, type TrackState };
+export { TimeStatus, type ClipParams, type TimeState, type ClipState };
