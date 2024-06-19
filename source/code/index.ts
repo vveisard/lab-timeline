@@ -25,26 +25,25 @@ interface TimeState {
 }
 
 /**
- * Params for a task in a timeline.
+ * Params for a track in a timeline.
  */
-interface BaseTimelineTaskParams {
+interface TrackParams {
   /**
-   * Start time, relative to the start of the timeline, when the task should start.
+   * Time (wrt the timeline) when the track should start.
    */
   readonly startTime: number;
 
   /**
-   * End time, relative to the end of the timeline, when the task should end.
-   * ie, the time (greater or equals) when the task should start.
-   * When missing, the task does not end.
+   * Time (wrt timeline) when the track should end.
+   * ie, the time (greater or equals) when the track should start.
    */
-  readonly endTime?: number;
+  readonly endTime: number;
 }
 
 /**
- * State for a task in a timeline.
+ * State for a track in a timeline.
  */
-interface TimelineTaskState {
+interface TrackState {
   readonly status: TimeStatus;
 
   readonly time: TimeState;
@@ -56,24 +55,30 @@ interface TimelineTaskState {
 interface TimelineState {
   readonly status: TimeStatus;
   readonly time: TimeState;
-  readonly tasks: Array<TimelineTaskState>;
+  /**
+   * State for tracks in this timeline, by track index.
+   */
+  readonly tracks: Array<TrackState>;
 }
 
 /**
  * Parameters for a timeline.
  */
-interface TimelineParams<TTimelineTaskParams extends BaseTimelineTaskParams> {
-  readonly tasks: Array<TTimelineTaskParams>;
+interface TimelineParams {
+  /**
+   * Parameters for tracks in this timeline, by track index.
+   */
+  readonly tracks: Array<TrackParams>;
 }
 
 /**
  * World for a timeline.
  */
-interface TimelineWorld<TTimelineTaskParams extends BaseTimelineTaskParams> {
+interface TimelineWorld {
   /**
    * Parameters for the timeline.
    */
-  readonly params: TimelineParams<TTimelineTaskParams>;
+  readonly params: TimelineParams;
 
   /**
    * State for the timeline.
@@ -87,10 +92,10 @@ interface TimelineWorld<TTimelineTaskParams extends BaseTimelineTaskParams> {
  * Functions for {@link TimelineState}.
  */
 namespace TimelineState {
-  export function create(taskAmount: number): TimelineState {
-    const taskStates = new Array(taskAmount);
-    for (let i = 0; i < taskAmount; i++) {
-      taskStates[i] = {
+  export function create(trackAmount: number): TimelineState {
+    const trackStates = new Array(trackAmount);
+    for (let i = 0; i < trackAmount; i++) {
+      trackStates[i] = {
         status: TimeStatus.None,
         time: {
           runningTime: null,
@@ -105,42 +110,128 @@ namespace TimelineState {
         runTime: null,
         runCount: null,
       },
-      tasks: taskStates,
+      tracks: trackStates,
     };
   }
 
   /**
-   * Update state of timeline, including all tasks.
+   * Update state of timeline, including all tracks.
    * Immutable state update.
    * @param deltaTime amount of time to increment all time by.
    * @returns next timeline state, or `undefined` if no-op.
    */
-  export function update<T1 extends BaseTimelineTaskParams>(
-    state: TimelineState,
-    params: TimelineParams<T1>,
+  export function update(
+    baseTimelineState: TimelineState,
+    params: TimelineParams,
     deltaTime: number
   ): TimelineState | undefined {
+    // TODO consider using draft library (immer or structura) for immutable state updates
+    // TODO refactor each operation to its own function (advanceTimelineTime, updateTrack, advanceTrackTime, etc)
+
     if (deltaTime === 0) {
       return undefined;
     }
 
-    // TODO update each task state (set to running, increment time, set to completed)
-    // TODO update timeline state (set to running, increment time, set to completed)
-    throw new Error(`Not implemented!`);
-  }
+    let varTimelineState: TimelineState = structuredClone(baseTimelineState);
 
-  /**
-   *
-   * Immutable state update.
-   * @throws if the task is not in the correct status or the task has an end time.
-   */
-  export function completeTask<T1 extends BaseTimelineTaskParams>(
-    state: TimelineState,
-    params: TimelineParams<T1>,
-    targetTaskIndex: number
-  ): TimelineState {
-    // TODO throw when has task params endTime
-    throw new Error(`Not implemented!`);
+    // start timeline
+    if (varTimelineState.status === TimeStatus.None) {
+      varTimelineState = {
+        ...varTimelineState,
+        status: TimeStatus.Completed,
+        time: {
+          ...varTimelineState.time,
+          runTime: 0,
+          runCount: 0,
+        },
+      };
+    }
+
+    // advance timeline
+    varTimelineState = {
+      ...varTimelineState,
+      time: {
+        ...varTimelineState.time,
+        runTime: varTimelineState.time.runTime! + deltaTime,
+        runCount: varTimelineState.time.runCount! + 1,
+      },
+    };
+
+    // update tracks
+    for (
+      let iTrackIndex = 0;
+      iTrackIndex < baseTimelineState.tracks.length;
+      iTrackIndex++
+    ) {
+      const iTrackParams = params.tracks[iTrackIndex];
+      const iBaseTrackState = baseTimelineState.tracks[iTrackIndex];
+      let iVarTrackState = iBaseTrackState;
+
+      // start track
+      if (iVarTrackState.status === TimeStatus.None) {
+        if (varTimelineState.time.runTime! >= iTrackParams.startTime) {
+          iVarTrackState = {
+            status: TimeStatus.Running,
+            time: {
+              runTime: 0,
+              runCount: 0,
+            },
+          };
+
+          varTimelineState = {
+            ...varTimelineState,
+            tracks: [
+              ...varTimelineState.tracks.slice(0, iTrackIndex),
+              iVarTrackState,
+              ...varTimelineState.tracks.slice(iTrackIndex + 1),
+            ],
+          };
+        }
+      }
+
+      // run track
+      if (iVarTrackState.status === TimeStatus.Running) {
+        // advance track time
+        iVarTrackState = {
+          ...iVarTrackState,
+          time: {
+            ...iVarTrackState.time,
+            runTime: iVarTrackState.time.runTime! + deltaTime,
+            runCount: iVarTrackState.time.runCount! + 1,
+          },
+        };
+
+        // complete track
+        if (iVarTrackState.time.runTime! >= iTrackParams.endTime) {
+          iVarTrackState = {
+            ...iVarTrackState,
+            status: TimeStatus.Completed,
+          };
+        }
+
+        varTimelineState = {
+          ...varTimelineState,
+          tracks: [
+            ...varTimelineState.tracks.slice(0, iTrackIndex),
+            iVarTrackState,
+            ...varTimelineState.tracks.slice(iTrackIndex + 1),
+          ],
+        };
+      }
+    }
+
+    // complete timeline if
+    // - every track is completed
+    if (
+      baseTimelineState.tracks.every((i) => i.status === TimeStatus.Completed)
+    ) {
+      varTimelineState = {
+        ...varTimelineState,
+        status: TimeStatus.Completed,
+      };
+    }
+
+    return varTimelineState;
   }
 }
 
@@ -148,13 +239,24 @@ namespace TimelineState {
  * Functions for {@link TimelineWorld}.
  */
 namespace TimelineWorld {
-  export function create<T1 extends BaseTimelineTaskParams>(
-    ...tasksParams: Array<T1>
-  ): TimelineWorld<T1> {
+  export function create(...tracksParams: Array<TrackParams>): TimelineWorld {
+    // validate tracks
+    for (let i = 0; i < tracksParams.length; i++) {
+      const iTrackParam = tracksParams[i];
+
+      if (iTrackParam.endTime < iTrackParam.startTime) {
+        throw new Error(
+          `Invalid argument! Track at index ${i}: endTime < startTime`
+        );
+      }
+
+      continue;
+    }
+
     return {
-      state: TimelineState.create(tasksParams.length),
+      state: TimelineState.create(tracksParams.length),
       params: {
-        tasks: tasksParams,
+        tracks: tracksParams,
       },
     };
   }
@@ -163,7 +265,7 @@ namespace TimelineWorld {
 export {
   TimeStatus,
   type TimelineWorld,
-  type BaseTimelineTaskParams,
+  type TrackParams,
   type TimeState,
-  type TimelineTaskState,
+  type TrackState,
 };

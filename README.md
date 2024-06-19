@@ -1,16 +1,16 @@
 # `lib-timeline`
 
-This tracks _only_ time; It is up to you to determine "what do do" with the time.
+This library is only concerned with time; It is up to you to determine "what do do" with the time.
 
 # Summary
 
-This library does not contain:
+This library does not concern:
 
-- scheduler
-- animations
+- scheduling
+- animation
 - messaging
 
-It's up to you to decide what do with the timeline, and to complete tasks yourself.
+It's up to you to decide what do with the time!
 
 # Usage
 
@@ -21,18 +21,19 @@ Bring your own scheduler and messaging solution.
 
 # API
 
-Tasks which do not have an `timeEnd` must be manually ended.
+Tracks which do not have an `timeEnd` must be manually ended.
 
 # Cookbook
 
-## VN dialog engine
+## Reveal characters in string
 
-If you are making a dialog engine, you be inclined to schedule each character as its own task. Alternatively, you can reveal characters using a function.
+If you are revealing characters in a string, you be inclined to schedule each piece of text (word, sentence, etc) as its own track. Alternatively, you can reveal characters using a function.
+
+- x is track run time
+- y is number of characters revealed
 
 In most cases, this reveal function is linear
 
-- x is task run time
-- y is number of characters revealed
 - the slope is "characters per second"
 
-If you want to do (something juicey)[https://youtu.be/v3FSsNA78iI?t=89] your "reveal function" could be a step function.
+If you want to do something juicey (like this)[https://youtu.be/v3FSsNA78iI?t=89] your "reveal function" could be a step function.

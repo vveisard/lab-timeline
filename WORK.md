@@ -2,6 +2,8 @@
 
 ## STORY as a user, I want basic timeline implementation
 
+### ACCEPTANCE
+
 I will know this is working when:
 
 - I can create a timeline
@@ -9,6 +11,10 @@ I will know this is working when:
 ### TODO
 
 very basic tests. Happy path, sad path.
+
+---
+
+# STORY as a user, I want to have "manually" completable tracks
 
 ---
 
@@ -57,4 +63,8 @@ Single threaded.
 
 ---
 
-# STORY as a user, I want timeline "speed", so that I can control how much time is added per update
+# STORY as a user, I want timeline "updateTimeScale", so that I can control how much time is added per update
+
+---
+
+# STORY as a user, I want "last real time ran"
