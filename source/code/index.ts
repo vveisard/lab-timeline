@@ -117,13 +117,19 @@ namespace TimelineState {
       return undefined;
     }
 
+    if (baseTimelineState.tracks.length !== params.tracks.length) {
+      throw new Error(
+        `Invalid argument! track count in params and state are mismatched.`
+      );
+    }
+
     let varTimelineState: TimelineState = structuredClone(baseTimelineState);
 
     // start timeline
     if (varTimelineState.status === TimeStatus.None) {
       varTimelineState = {
         ...varTimelineState,
-        status: TimeStatus.Completed,
+        status: TimeStatus.Running,
         time: {
           ...varTimelineState.time,
           runTime: 0,
@@ -187,7 +193,7 @@ namespace TimelineState {
         };
 
         // complete track
-        if (iVarTrackState.time.runTime! >= iTrackParams.endTime) {
+        if (varTimelineState.time.runTime! >= iTrackParams.endTime) {
           iVarTrackState = {
             ...iVarTrackState,
             status: TimeStatus.Completed,
@@ -208,7 +214,9 @@ namespace TimelineState {
     // complete timeline if
     // - every track is completed
     if (
-      baseTimelineState.tracks.every((i) => i.status === TimeStatus.Completed)
+      varTimelineState.tracks.every(
+        (iTrackState) => iTrackState.status === TimeStatus.Completed
+      )
     ) {
       varTimelineState = {
         ...varTimelineState,
@@ -220,7 +228,7 @@ namespace TimelineState {
   }
 }
 
-export { TimelineState };
+export { type TimelineParams, TimelineState };
 
 // @region-end
 
@@ -250,6 +258,7 @@ namespace TimelineWorld {
   export function create(trackParams: Array<TrackParams>): TimelineWorld {
     // validate tracks
     for (let i = 0; i < trackParams.length; i++) {
+      // TODO move to "validateTrackParams" function
       const iTrackParam = trackParams[i];
 
       if (iTrackParam.endTime < iTrackParam.startTime) {
