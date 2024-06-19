@@ -50,18 +50,6 @@ interface TrackState {
 }
 
 /**
- * State for a timeline.
- */
-interface TimelineState {
-  readonly status: TimeStatus;
-  readonly time: TimeState;
-  /**
-   * State for tracks in this timeline, by track index.
-   */
-  readonly tracks: Array<TrackState>;
-}
-
-/**
  * Parameters for a timeline.
  */
 interface TimelineParams {
@@ -71,21 +59,18 @@ interface TimelineParams {
   readonly tracks: Array<TrackParams>;
 }
 
-/**
- * World for a timeline.
- */
-interface TimelineWorld {
-  /**
-   * Parameters for the timeline.
-   */
-  readonly params: TimelineParams;
+// @region-start
 
+/**
+ * State for a timeline.
+ */
+interface TimelineState {
+  readonly status: TimeStatus;
+  readonly time: TimeState;
   /**
-   * State for the timeline.
-   * @remarks
-   * May be synced from upstream.
+   * State for tracks in this timeline, by track index.
    */
-  readonly state: TimelineState;
+  readonly tracks: Array<TrackState>;
 }
 
 /**
@@ -235,14 +220,37 @@ namespace TimelineState {
   }
 }
 
+export { TimelineState };
+
+// @region-end
+
+// @region-start
+
+/**
+ * World for a timeline.
+ */
+interface TimelineWorld {
+  /**
+   * Parameters for the timeline.
+   */
+  readonly params: TimelineParams;
+
+  /**
+   * State for the timeline.
+   * @remarks
+   * May be synced from upstream.
+   */
+  readonly state: TimelineState;
+}
+
 /**
  * Functions for {@link TimelineWorld}.
  */
 namespace TimelineWorld {
-  export function create(...tracksParams: Array<TrackParams>): TimelineWorld {
+  export function create(trackParams: Array<TrackParams>): TimelineWorld {
     // validate tracks
-    for (let i = 0; i < tracksParams.length; i++) {
-      const iTrackParam = tracksParams[i];
+    for (let i = 0; i < trackParams.length; i++) {
+      const iTrackParam = trackParams[i];
 
       if (iTrackParam.endTime < iTrackParam.startTime) {
         throw new Error(
@@ -250,22 +258,52 @@ namespace TimelineWorld {
         );
       }
 
+      if (iTrackParam.startTime < 0) {
+        throw new Error(`Invalid argument! Track at index ${i}: startTime < 0`);
+      }
+
+      if (iTrackParam.endTime < 0) {
+        throw new Error(`Invalid argument! Track at index ${i}: endTime < 0`);
+      }
+
+      if (Number.isNaN(iTrackParam.startTime)) {
+        throw new Error(
+          `Invalid argument! Track at index ${i}: startTime Number.isNaN`
+        );
+      }
+
+      if (Number.isNaN(iTrackParam.endTime)) {
+        throw new Error(
+          `Invalid argument! Track at index ${i}: endTime Number.isNaN`
+        );
+      }
+
+      if (!Number.isFinite(iTrackParam.startTime)) {
+        throw new Error(
+          `Invalid argument! Track at index ${i}: startTime !Number.isFinite`
+        );
+      }
+
+      if (!Number.isFinite(iTrackParam.endTime)) {
+        throw new Error(
+          `Invalid argument! Track at index ${i}: endTime !Number.isFinite`
+        );
+      }
+
       continue;
     }
 
     return {
-      state: TimelineState.create(tracksParams.length),
+      state: TimelineState.create(trackParams.length),
       params: {
-        tracks: tracksParams,
+        tracks: trackParams,
       },
     };
   }
 }
 
-export {
-  TimeStatus,
-  type TimelineWorld,
-  type TrackParams,
-  type TimeState,
-  type TrackState,
-};
+export { TimelineWorld };
+
+// @region-end
+
+export { TimeStatus, type TrackParams, type TimeState, type TrackState };

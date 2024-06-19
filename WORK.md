@@ -10,7 +10,8 @@ I will know this is working when:
 
 ### TODO
 
-very basic tests. Happy path, sad path.
+create TimelineState tests
+`describe("TimelineState.update"`
 
 ---
 
