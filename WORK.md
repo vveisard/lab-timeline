@@ -14,20 +14,6 @@ very basic tests. Happy path, sad path.
 
 ---
 
-# STORY as a user, I want to have "manually" completable tracks
-
----
-
-# STORY As a user, I want startCount and endCount for params, so that I can control when a task starts
-
-Currently tasks only have "time" instead, we would like tasks to optionally have "count" instead
-
-## DESIGN
-
-It's unclear if both bounds can both be defined. ie, is `startTime` and `startCount` valid? what would happen? I think you should only be able to specify time or count for both bounds at once, not mix and match or combine.
-
----
-
 # EPIC usage example
 
 ## STORY as a user, I want a basic usage example
@@ -60,6 +46,16 @@ Single threaded.
 
 - some series of timeline factories
   - there's no need for "instructions"
+
+---
+
+# STORY As a user, I want startCount and endCount for params, so that I can control when a task starts
+
+Currently tasks only have "time" instead, we would like tasks to optionally have "count" instead
+
+## DESIGN
+
+It's unclear if both bounds can both be defined. ie, is `startTime` and `startCount` valid? what would happen? I think you should only be able to specify time or count for both bounds at once, not mix and match or combine.
 
 ---
 
