@@ -1,23 +1,10 @@
-# EPIC Initial
-
-## STORY as a user, I want basic timeline implementation
-
-### ACCEPTANCE
-
-I will know this is working when:
-
-- I can create a timeline
-
-### TODO
-
-create TimelineState tests
-`describe("TimelineState.update"`
-
----
-
 # EPIC usage example
 
 ## STORY as a user, I want a basic usage example
+
+### ACCEPTANCE
+
+## STORY as a user, I want a complex usage example
 
 ### ACCEPTANCE
 
