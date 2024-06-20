@@ -4,6 +4,8 @@
 
 ### ACCEPTANCE
 
+I will know this is complete when a red square moves across canvas from left to right, then top to bottom, using two different clips
+
 ## STORY as a user, I want a complex usage example
 
 ### ACCEPTANCE
