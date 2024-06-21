@@ -41,12 +41,87 @@ interface ClipParams {
 }
 
 /**
+ * Functions for {@link TimelineWorld}.
+ */
+namespace TimelineParams {
+  /**
+   * throws an error if any clip is invalid.
+   */
+  export function create(someClipParams: Array<ClipParams>): TimelineParams {
+    // validate clips
+    for (let i = 0; i < someClipParams.length; i++) {
+      // TODO move to "validateClipParams" function
+      const iClipParam = someClipParams[i];
+
+      if (iClipParam.endTime < iClipParam.startTime) {
+        throw new Error(
+          `Invalid argument! Clip at index ${i}: endTime < startTime`
+        );
+      }
+
+      if (iClipParam.startTime < 0) {
+        throw new Error(`Invalid argument! Clip at index ${i}: startTime < 0`);
+      }
+
+      if (iClipParam.endTime < 0) {
+        throw new Error(`Invalid argument! Clip at index ${i}: endTime < 0`);
+      }
+
+      if (Number.isNaN(iClipParam.startTime)) {
+        throw new Error(
+          `Invalid argument! Clip at index ${i}: startTime Number.isNaN`
+        );
+      }
+
+      if (Number.isNaN(iClipParam.endTime)) {
+        throw new Error(
+          `Invalid argument! Clip at index ${i}: endTime Number.isNaN`
+        );
+      }
+
+      if (!Number.isFinite(iClipParam.startTime)) {
+        throw new Error(
+          `Invalid argument! Clip at index ${i}: startTime !Number.isFinite`
+        );
+      }
+
+      if (!Number.isFinite(iClipParam.endTime)) {
+        throw new Error(
+          `Invalid argument! Clip at index ${i}: endTime !Number.isFinite`
+        );
+      }
+
+      continue;
+    }
+
+    return {
+      clips: someClipParams,
+    };
+  }
+}
+
+/**
  * State for a clip in a timeline.
  */
 interface ClipState {
   readonly status: TimeStatus;
 
   readonly time: TimeState;
+}
+
+namespace ClipState {
+  export function getNormalizedClipTime(
+    clipState: ClipState,
+    clipParams: ClipParams
+  ): number {
+    if (clipState.time.runTime === null) {
+      throw new Error(`Invalid state!`);
+    }
+    return (
+      (clipState.time.runTime - clipParams.startTime) /
+      (clipParams.endTime - clipParams.startTime)
+    );
+  }
 }
 
 /**
@@ -107,7 +182,7 @@ namespace TimelineState {
    */
   export function update(
     baseTimelineState: TimelineState,
-    params: TimelineParams,
+    timelineParams: TimelineParams,
     deltaTime: number
   ): TimelineState | undefined {
     // TODO consider using draft library (immer or structura) for immutable state updates
@@ -117,7 +192,7 @@ namespace TimelineState {
       return undefined;
     }
 
-    if (baseTimelineState.clips.length !== params.clips.length) {
+    if (baseTimelineState.clips.length !== timelineParams.clips.length) {
       throw new Error(
         `Invalid argument! clip count in params and state are mismatched.`
       );
@@ -139,14 +214,16 @@ namespace TimelineState {
     }
 
     // advance timeline
-    varTimelineState = {
-      ...varTimelineState,
-      time: {
-        ...varTimelineState.time,
-        runTime: varTimelineState.time.runTime! + deltaTime,
-        runCount: varTimelineState.time.runCount! + 1,
-      },
-    };
+    if (varTimelineState.status === TimeStatus.Running) {
+      varTimelineState = {
+        ...varTimelineState,
+        time: {
+          ...varTimelineState.time,
+          runTime: varTimelineState.time.runTime! + deltaTime,
+          runCount: varTimelineState.time.runCount! + 1,
+        },
+      };
+    }
 
     // update clips
     for (
@@ -154,7 +231,7 @@ namespace TimelineState {
       iClipIndex < baseTimelineState.clips.length;
       iClipIndex++
     ) {
-      const iClipParams = params.clips[iClipIndex];
+      const iClipParams = timelineParams.clips[iClipIndex];
       const iBaseClipState = baseTimelineState.clips[iClipIndex];
       let iVarClipState = iBaseClipState;
 
@@ -187,7 +264,10 @@ namespace TimelineState {
           ...iVarClipState,
           time: {
             ...iVarClipState.time,
-            runTime: iVarClipState.time.runTime! + deltaTime,
+            runTime: Math.min(
+              iVarClipState.time.runTime! + deltaTime,
+              iClipParams.endTime
+            ),
             runCount: iVarClipState.time.runCount! + 1,
           },
         };
@@ -228,91 +308,4 @@ namespace TimelineState {
   }
 }
 
-export { type TimelineParams, TimelineState };
-
-// @region-end
-
-// @region-start
-
-/**
- * World for a timeline.
- */
-interface TimelineWorld {
-  /**
-   * Parameters for the timeline.
-   */
-  readonly params: TimelineParams;
-
-  /**
-   * State for the timeline.
-   * @remarks
-   * May be synced from upstream.
-   */
-  readonly state: TimelineState;
-}
-
-/**
- * Functions for {@link TimelineWorld}.
- */
-namespace TimelineWorld {
-  export function create(clipParams: Array<ClipParams>): TimelineWorld {
-    // validate clips
-    for (let i = 0; i < clipParams.length; i++) {
-      // TODO move to "validateClipParams" function
-      const iClipParam = clipParams[i];
-
-      if (iClipParam.endTime < iClipParam.startTime) {
-        throw new Error(
-          `Invalid argument! Clip at index ${i}: endTime < startTime`
-        );
-      }
-
-      if (iClipParam.startTime < 0) {
-        throw new Error(`Invalid argument! Clip at index ${i}: startTime < 0`);
-      }
-
-      if (iClipParam.endTime < 0) {
-        throw new Error(`Invalid argument! Clip at index ${i}: endTime < 0`);
-      }
-
-      if (Number.isNaN(iClipParam.startTime)) {
-        throw new Error(
-          `Invalid argument! Clip at index ${i}: startTime Number.isNaN`
-        );
-      }
-
-      if (Number.isNaN(iClipParam.endTime)) {
-        throw new Error(
-          `Invalid argument! Clip at index ${i}: endTime Number.isNaN`
-        );
-      }
-
-      if (!Number.isFinite(iClipParam.startTime)) {
-        throw new Error(
-          `Invalid argument! Clip at index ${i}: startTime !Number.isFinite`
-        );
-      }
-
-      if (!Number.isFinite(iClipParam.endTime)) {
-        throw new Error(
-          `Invalid argument! Clip at index ${i}: endTime !Number.isFinite`
-        );
-      }
-
-      continue;
-    }
-
-    return {
-      state: TimelineState.create(clipParams.length),
-      params: {
-        clips: clipParams,
-      },
-    };
-  }
-}
-
-export { TimelineWorld };
-
-// @region-end
-
-export { TimeStatus, type ClipParams, type TimeState, type ClipState };
+export { type TimeState, ClipState, TimeStatus, TimelineParams, TimelineState };

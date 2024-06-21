@@ -1,11 +1,5 @@
 # EPIC usage example
 
-## STORY as a user, I want a basic usage example
-
-### ACCEPTANCE
-
-I will know this is complete when a red square moves across canvas from left to right, then top to bottom, using two different clips
-
 ## STORY as a user, I want a complex usage example
 
 ### ACCEPTANCE
@@ -34,23 +28,18 @@ Single threaded.
 
   - renders the dialog graphics world to the canvas
 
-- some series of timeline factories
-  - there's no need for "instructions"
+- some series of timelines (there's no need for "instructions")
+
+### TODO
+
+create a graphics world with "character content" in the resources. charater content has an asset manifest which are urls for the assets
 
 ---
 
 # STORY As a user, I want startCount and endCount for params, so that I can control when a task starts
 
-Currently tasks only have "time" instead, we would like tasks to optionally have "count" instead
+Currently tasks only have "time". instead, we would like tasks to optionally have "count" instead
 
 ## DESIGN
 
 It's unclear if both bounds can both be defined. ie, is `startTime` and `startCount` valid? what would happen? I think you should only be able to specify time or count for both bounds at once, not mix and match or combine.
-
----
-
-# STORY as a user, I want timeline "updateTimeScale", so that I can control how much time is added per update
-
----
-
-# STORY as a user, I want "last real time ran"

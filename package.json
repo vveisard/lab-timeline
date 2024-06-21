@@ -1,7 +1,6 @@
 {
   "name": "project-lab-timeline",
   "workspaces": [
-    "./examples/*",
     "./packages/*"
   ]
 }

@@ -1,0 +1,20 @@
+{
+  "name": "@negabyte-studios/lib-timeline",
+  "exports": {
+    ".": {
+      "import": "./source/code/index.ts",
+      "types": "./source/code/index.ts",
+      "default": "./source/code/index.ts"
+    }
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "solid-js": "^1.8.17"
+  }
+}

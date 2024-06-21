@@ -1,0 +1,25 @@
+{
+  "name": "app-redmonds-quest",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "solid-devtools": "^0.29.2",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11",
+    "vite-plugin-solid": "^2.8.2",
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@negabyte-studios/lib-entity": "file:../../packages/@negabyte-studios+lib-entity",
+    "@negabyte-studios/lib-math": "file:../../packages/@negabyte-studios+lib-math",
+    "@negabyte-studios/lib-timeline": "file:../../packages/@negabyte-studios+lib-timeline",
+    "solid-js": "^1.8.11"
+  }
+}
