@@ -10,6 +10,7 @@ import type { TimelineState } from "@negabyte-studios/lib-timeline";
  */
 interface CharacterGraphicsEntityState {
   readonly position: Point2dFloat64;
+  readonly color: CanvasFillStrokeStyles["fillStyle"];
 }
 
 interface GraphicsWorldEntitiesState {
@@ -17,7 +18,7 @@ interface GraphicsWorldEntitiesState {
 }
 
 enum GraphicsTaskTypeEnum {
-  AnimateCharacterPosition,
+  AnimateCharacterPositionTimelineClip,
 }
 
 interface BaseGraphicsTaskParams {
@@ -25,7 +26,7 @@ interface BaseGraphicsTaskParams {
 }
 
 interface AnimateCharacterPositionTaskParams extends BaseGraphicsTaskParams {
-  readonly taskType: GraphicsTaskTypeEnum.AnimateCharacterPosition;
+  readonly taskType: GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip;
   readonly targetCharacterEntityId: EntityId;
   readonly positionStart: Point2dFloat64;
   readonly positionEnd: Point2dFloat64;
@@ -89,10 +90,12 @@ namespace GraphicsWorld {
   }
 
   export function renderCanvas(graphicsWorld: GraphicsWorld): undefined {
-    graphicsWorld.resources.canvasRenderingContext.fillStyle = "red";
     for (const [iCharacterEntityId, iCharacterEntityState] of Object.entries(
       graphicsWorld.store.entitiesState.characters.states
     )) {
+      graphicsWorld.resources.canvasRenderingContext.fillStyle =
+        iCharacterEntityState.color;
+
       graphicsWorld.resources.canvasRenderingContext.fillRect(
         ...iCharacterEntityState.position,
         5,

@@ -10,7 +10,7 @@ namespace Float64 {
     max: Float64,
     value: Float64
   ): Float64 {
-    return (value - min) / (max - min);
+    return value / (max - min);
   }
   export function interpolate(start: Float64, end: Float64, t: Float64) {
     t = Math.max(0, Math.min(1, t));
