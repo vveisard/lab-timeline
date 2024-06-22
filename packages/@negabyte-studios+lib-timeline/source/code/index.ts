@@ -95,7 +95,7 @@ namespace TimelineParams {
     }
 
     return {
-      clips: someClipParams,
+      clipParams: someClipParams,
     };
   }
 }
@@ -104,9 +104,9 @@ namespace TimelineParams {
  * State for a clip in a timeline.
  */
 interface ClipState {
-  readonly status: TimeStatus;
+  readonly timeStatus: TimeStatus;
 
-  readonly time: TimeState;
+  readonly timeState: TimeState;
 }
 
 namespace ClipState {
@@ -114,11 +114,11 @@ namespace ClipState {
     clipState: ClipState,
     clipParams: ClipParams
   ): number {
-    if (clipState.time.runTime === null) {
+    if (clipState.timeState.runTime === null) {
       throw new Error(`Invalid state!`);
     }
     return (
-      (clipState.time.runTime - clipParams.startTime) /
+      (clipState.timeState.runTime - clipParams.startTime) /
       (clipParams.endTime - clipParams.startTime)
     );
   }
@@ -131,7 +131,7 @@ interface TimelineParams {
   /**
    * Parameters for clips in this timeline, by clip index.
    */
-  readonly clips: Array<ClipParams>;
+  readonly clipParams: Array<ClipParams>;
 }
 
 // @region-start
@@ -140,12 +140,12 @@ interface TimelineParams {
  * State for a timeline.
  */
 interface TimelineState {
-  readonly status: TimeStatus;
-  readonly time: TimeState;
+  readonly timeStatus: TimeStatus;
+  readonly timeState: TimeState;
   /**
    * State for clips in this timeline, by clip index.
    */
-  readonly clips: Array<ClipState>;
+  readonly clipStates: Array<ClipState>;
 }
 
 /**
@@ -153,24 +153,24 @@ interface TimelineState {
  */
 namespace TimelineState {
   export function create(clipAmount: number): TimelineState {
-    const clipStates = new Array(clipAmount);
-    for (let i = 0; i < clipAmount; i++) {
-      clipStates[i] = {
-        status: TimeStatus.None,
-        time: {
-          runningTime: null,
-          runningUpdateCount: null,
+    const clipStates: Array<ClipState> = new Array(clipAmount);
+    for (let iClipIndex = 0; iClipIndex < clipAmount; iClipIndex++) {
+      clipStates[iClipIndex] = {
+        timeStatus: TimeStatus.None,
+        timeState: {
+          runTime: null,
+          runCount: null,
         },
       };
     }
 
     return {
-      status: TimeStatus.None,
-      time: {
+      timeStatus: TimeStatus.None,
+      timeState: {
         runTime: null,
         runCount: null,
       },
-      clips: clipStates,
+      clipStates: clipStates,
     };
   }
 
@@ -192,7 +192,9 @@ namespace TimelineState {
       return undefined;
     }
 
-    if (baseTimelineState.clips.length !== timelineParams.clips.length) {
+    if (
+      baseTimelineState.clipStates.length !== timelineParams.clipParams.length
+    ) {
       throw new Error(
         `Invalid argument! clip count in params and state are mismatched.`
       );
@@ -201,12 +203,12 @@ namespace TimelineState {
     let varTimelineState: TimelineState = structuredClone(baseTimelineState);
 
     // start timeline
-    if (varTimelineState.status === TimeStatus.None) {
+    if (varTimelineState.timeStatus === TimeStatus.None) {
       varTimelineState = {
         ...varTimelineState,
-        status: TimeStatus.Running,
-        time: {
-          ...varTimelineState.time,
+        timeStatus: TimeStatus.Running,
+        timeState: {
+          ...varTimelineState.timeState,
           runTime: 0,
           runCount: 0,
         },
@@ -214,13 +216,13 @@ namespace TimelineState {
     }
 
     // advance timeline
-    if (varTimelineState.status === TimeStatus.Running) {
+    if (varTimelineState.timeStatus === TimeStatus.Running) {
       varTimelineState = {
         ...varTimelineState,
-        time: {
-          ...varTimelineState.time,
-          runTime: varTimelineState.time.runTime! + deltaTime,
-          runCount: varTimelineState.time.runCount! + 1,
+        timeState: {
+          ...varTimelineState.timeState,
+          runTime: varTimelineState.timeState.runTime! + deltaTime,
+          runCount: varTimelineState.timeState.runCount! + 1,
         },
       };
     }
@@ -228,19 +230,19 @@ namespace TimelineState {
     // update clips
     for (
       let iClipIndex = 0;
-      iClipIndex < baseTimelineState.clips.length;
+      iClipIndex < baseTimelineState.clipStates.length;
       iClipIndex++
     ) {
-      const iClipParams = timelineParams.clips[iClipIndex];
-      const iBaseClipState = baseTimelineState.clips[iClipIndex];
+      const iClipParams = timelineParams.clipParams[iClipIndex];
+      const iBaseClipState = baseTimelineState.clipStates[iClipIndex];
       let iVarClipState = iBaseClipState;
 
       // start clip
-      if (iVarClipState.status === TimeStatus.None) {
-        if (varTimelineState.time.runTime! >= iClipParams.startTime) {
+      if (iVarClipState.timeStatus === TimeStatus.None) {
+        if (varTimelineState.timeState.runTime! >= iClipParams.startTime) {
           iVarClipState = {
-            status: TimeStatus.Running,
-            time: {
+            timeStatus: TimeStatus.Running,
+            timeState: {
               runTime: 0,
               runCount: 0,
             },
@@ -248,44 +250,44 @@ namespace TimelineState {
 
           varTimelineState = {
             ...varTimelineState,
-            clips: [
-              ...varTimelineState.clips.slice(0, iClipIndex),
+            clipStates: [
+              ...varTimelineState.clipStates.slice(0, iClipIndex),
               iVarClipState,
-              ...varTimelineState.clips.slice(iClipIndex + 1),
+              ...varTimelineState.clipStates.slice(iClipIndex + 1),
             ],
           };
         }
       }
 
       // run clip
-      if (iVarClipState.status === TimeStatus.Running) {
+      if (iVarClipState.timeStatus === TimeStatus.Running) {
         // advance clip time
         iVarClipState = {
           ...iVarClipState,
-          time: {
-            ...iVarClipState.time,
+          timeState: {
+            ...iVarClipState.timeState,
             runTime: Math.min(
-              iVarClipState.time.runTime! + deltaTime,
+              iVarClipState.timeState.runTime! + deltaTime,
               iClipParams.endTime
             ),
-            runCount: iVarClipState.time.runCount! + 1,
+            runCount: iVarClipState.timeState.runCount! + 1,
           },
         };
 
         // complete clip
-        if (varTimelineState.time.runTime! >= iClipParams.endTime) {
+        if (varTimelineState.timeState.runTime! >= iClipParams.endTime) {
           iVarClipState = {
             ...iVarClipState,
-            status: TimeStatus.Completed,
+            timeStatus: TimeStatus.Completed,
           };
         }
 
         varTimelineState = {
           ...varTimelineState,
-          clips: [
-            ...varTimelineState.clips.slice(0, iClipIndex),
+          clipStates: [
+            ...varTimelineState.clipStates.slice(0, iClipIndex),
             iVarClipState,
-            ...varTimelineState.clips.slice(iClipIndex + 1),
+            ...varTimelineState.clipStates.slice(iClipIndex + 1),
           ],
         };
       }
@@ -294,13 +296,13 @@ namespace TimelineState {
     // complete timeline if
     // - every clip is completed
     if (
-      varTimelineState.clips.every(
-        (iClipState) => iClipState.status === TimeStatus.Completed
+      varTimelineState.clipStates.every(
+        (iClipState) => iClipState.timeStatus === TimeStatus.Completed
       )
     ) {
       varTimelineState = {
         ...varTimelineState,
-        status: TimeStatus.Completed,
+        timeStatus: TimeStatus.Completed,
       };
     }
 

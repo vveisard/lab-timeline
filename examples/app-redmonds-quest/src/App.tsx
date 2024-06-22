@@ -48,7 +48,7 @@ const App: Component = () => {
     ]);
 
     const graphicsWorld = GraphicsWorld.create(graphicsWorldResources, {
-      entities: {
+      entitiesState: {
         characters: {
           ids: ["bluford", "redmond"],
           states: {
@@ -62,28 +62,41 @@ const App: Component = () => {
             },
           },
         },
+        tasks: {
+          ids: [
+            "animate-character-position-bluford-a",
+            "animate-character-position-redmond-a",
+            "animate-character-position-redmond-b",
+          ],
+          states: {
+            "animate-character-position-bluford-a": {
+              taskType:
+                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip,
+              targetCharacterEntityId: "bluford",
+              positionStart: [0, 0],
+              positionEnd: [100, 100],
+              targetTimelineClipIndex: 0,
+            },
+            "animate-character-position-redmond-a": {
+              taskType:
+                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip,
+              targetCharacterEntityId: "redmond",
+              positionStart: [0, 0],
+              positionEnd: [100, 0],
+              targetTimelineClipIndex: 1,
+            },
+            "animate-character-position-redmond-b": {
+              taskType:
+                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip,
+              targetCharacterEntityId: "redmond",
+              positionStart: [100, 0],
+              positionEnd: [100, 100],
+              targetTimelineClipIndex: 2,
+            },
+          },
+        },
       },
-      tasks: [
-        {
-          taskType: GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip,
-          targetCharacterEntityId: "bluford",
-          positionStart: [0, 0],
-          positionEnd: [100, 100],
-        },
-        {
-          taskType: GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip,
-          targetCharacterEntityId: "redmond",
-          positionStart: [0, 0],
-          positionEnd: [100, 0],
-        },
-        {
-          taskType: GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip,
-          targetCharacterEntityId: "redmond",
-          positionStart: [100, 0],
-          positionEnd: [100, 100],
-        },
-      ],
-      timeline: TimelineState.create(timelineParams.clips.length),
+      timelineState: TimelineState.create(timelineParams.clipParams.length),
     });
 
     function handleAnimationFrame() {
@@ -96,31 +109,35 @@ const App: Component = () => {
       graphicsWorld.store.setTimelineState(nextTimelineState);
 
       // set character entity state using timeline and tasks
-      for (
-        let iTimelineClipIndex = 0;
-        iTimelineClipIndex < graphicsWorld.store.timelineState.clips.length;
-        iTimelineClipIndex++
-      ) {
-        const iTimelineClipState =
-          graphicsWorld.store.timelineState.clips[iTimelineClipIndex];
-        const iTimelineClipTaskParam =
-          graphicsWorld.store.tasksParams[iTimelineClipIndex];
+      for (const iTaskEntityId of graphicsWorld.store.entitiesState.tasks.ids) {
+        const iTaskEntityState =
+          graphicsWorld.store.entitiesState.tasks.states[iTaskEntityId];
 
-        if (iTimelineClipState.status === TimeStatus.None) {
+        const iTaskTargetTimelineClipState =
+          graphicsWorld.store.timelineState.clipStates[
+            iTaskEntityState.targetTimelineClipIndex
+          ];
+
+        if (iTaskTargetTimelineClipState.timeStatus === TimeStatus.None) {
           continue;
         }
 
-        switch (iTimelineClipTaskParam.taskType) {
+        switch (iTaskEntityState.taskType) {
           case GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip: {
+            const iTaskTargetClipParams =
+              timelineParams.clipParams[
+                iTaskEntityState.targetTimelineClipIndex
+              ];
+
             const taskTimelineClipProgress = Float64.getProgress(
-              timelineParams.clips[iTimelineClipIndex].startTime,
-              timelineParams.clips[iTimelineClipIndex].endTime,
-              iTimelineClipState.time.runTime
+              iTaskTargetClipParams.startTime,
+              iTaskTargetClipParams.endTime,
+              iTaskTargetTimelineClipState.timeState.runTime
             );
 
             const nextPosition = Point2dFloat64.interpolatePosition(
-              iTimelineClipTaskParam.positionStart,
-              iTimelineClipTaskParam.positionEnd,
+              iTaskEntityState.positionStart,
+              iTaskEntityState.positionEnd,
               taskTimelineClipProgress
             );
 
@@ -128,7 +145,7 @@ const App: Component = () => {
               produce<DeepMutable<GraphicsWorldEntitiesState>>(
                 (state) =>
                   (state.characters.states[
-                    iTimelineClipTaskParam.targetCharacterEntityId
+                    iTaskEntityState.targetCharacterEntityId
                   ].position = nextPosition)
               )
             );
@@ -146,13 +163,19 @@ const App: Component = () => {
 
       requestAnimationFrame(handleAnimationFrame);
     }
-
     requestAnimationFrame(handleAnimationFrame);
   });
 
   return (
     <>
-      <canvas ref={setCanvasElement} width={256} height={192} />
+      <canvas
+        ref={setCanvasElement}
+        width={256}
+        height={192}
+        style={{
+          "image-rendering": "pixelated",
+        }}
+      />
     </>
   );
 };

@@ -15,32 +15,35 @@ interface CharacterGraphicsEntityState {
 
 interface GraphicsWorldEntitiesState {
   readonly characters: EntityCollection<CharacterGraphicsEntityState>;
+  readonly tasks: EntityCollection<GraphicsTaskEntityState>;
 }
 
 enum GraphicsTaskTypeEnum {
   AnimateCharacterPositionTimelineClip,
 }
 
-interface BaseGraphicsTaskParams {
+interface BaseGraphicsTaskState {
   readonly taskType: GraphicsTaskTypeEnum;
 }
 
-interface AnimateCharacterPositionTaskParams extends BaseGraphicsTaskParams {
+interface AnimateCharacterPositionUsingTimelineClipTaskState
+  extends BaseGraphicsTaskState {
   readonly taskType: GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip;
+  /**
+   * Index of the target timeline clip to use.
+   */
+  readonly targetTimelineClipIndex: number;
   readonly targetCharacterEntityId: EntityId;
   readonly positionStart: Point2dFloat64;
   readonly positionEnd: Point2dFloat64;
 }
 
-type GraphicsTaskParams = AnimateCharacterPositionTaskParams;
-
-type GraphicsWorldTasksParams = Array<GraphicsTaskParams>;
+type GraphicsTaskEntityState =
+  AnimateCharacterPositionUsingTimelineClipTaskState;
 
 interface GraphicsWorldStore {
   readonly entitiesState: Store<GraphicsWorldEntitiesState>;
   readonly setEntitiesState: SetStoreFunction<GraphicsWorldEntitiesState>;
-  readonly tasksParams: Store<GraphicsWorldTasksParams>;
-  readonly setTasksParams: SetStoreFunction<GraphicsWorldTasksParams>;
   readonly timelineState: Store<TimelineState | null>;
   readonly setTimelineState: SetStoreFunction<TimelineState | null>;
 }
@@ -55,9 +58,8 @@ interface GraphicsWorld {
 }
 
 interface GraphicsWorldState {
-  readonly entities: GraphicsWorldEntitiesState;
-  readonly tasks: GraphicsWorldTasksParams | null;
-  readonly timeline: TimelineState | null;
+  readonly entitiesState: GraphicsWorldEntitiesState;
+  readonly timelineState: TimelineState | null;
 }
 
 namespace GraphicsWorld {
@@ -66,14 +68,10 @@ namespace GraphicsWorld {
     worldState: GraphicsWorldState
   ): GraphicsWorld {
     const [entitiesStore, setEntitiesStore] =
-      createStore<GraphicsWorldEntitiesState>(worldState.entities);
-
-    const [taskParams, setTaskParams] = createStore<GraphicsWorldTasksParams>(
-      worldState.tasks
-    );
+      createStore<GraphicsWorldEntitiesState>(worldState.entitiesState);
 
     const [timelineState, setTimelineState] = createStore<TimelineState>(
-      worldState.timeline
+      worldState.timelineState
     );
 
     return {
@@ -81,8 +79,6 @@ namespace GraphicsWorld {
       store: {
         entitiesState: entitiesStore,
         setEntitiesState: setEntitiesStore,
-        tasksParams: taskParams,
-        setTasksParams: setTaskParams,
         timelineState: timelineState,
         setTimelineState: setTimelineState,
       },

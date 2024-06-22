@@ -9,7 +9,7 @@ import {
 describe("TimelineState.update", () => {
   it("happily completes clip and timeline", () => {
     const timelineParams: TimelineParams = {
-      clips: [
+      clipParams: [
         {
           startTime: 0,
           endTime: 1,
@@ -26,16 +26,18 @@ describe("TimelineState.update", () => {
 
     expect(finalTimelineState).toBeDefined();
     expect(finalTimelineState).not.toBe(baseTimelineState);
-    expect(finalTimelineState!.status).toBe(TimeStatus.Completed);
+    expect(finalTimelineState!.timeStatus).toBe(TimeStatus.Completed);
 
-    expect(finalTimelineState!.clips[0].status).toBe(TimeStatus.Completed);
-    expect(finalTimelineState!.clips[0].time.runCount).toBe(1);
-    expect(finalTimelineState!.clips[0].time.runTime).toBe(1);
+    expect(finalTimelineState!.clipStates[0].timeStatus).toBe(
+      TimeStatus.Completed
+    );
+    expect(finalTimelineState!.clipStates[0].timeState.runCount).toBe(1);
+    expect(finalTimelineState!.clipStates[0].timeState.runTime).toBe(1);
   });
 
   it("happily completes clip 0, continues clip 1, and continues timeline", () => {
     const timelineParams: TimelineParams = {
-      clips: [
+      clipParams: [
         {
           startTime: 0,
           endTime: 1,
@@ -56,20 +58,24 @@ describe("TimelineState.update", () => {
 
     expect(finalTimelineState).toBeDefined();
     expect(finalTimelineState).not.toBe(baseTimelineState);
-    expect(finalTimelineState!.status).toBe(TimeStatus.Running);
+    expect(finalTimelineState!.timeStatus).toBe(TimeStatus.Running);
 
-    expect(finalTimelineState!.clips[0].status).toBe(TimeStatus.Completed);
-    expect(finalTimelineState!.clips[0].time.runCount).toBe(1);
-    expect(finalTimelineState!.clips[0].time.runTime).toBe(1);
+    expect(finalTimelineState!.clipStates[0].timeStatus).toBe(
+      TimeStatus.Completed
+    );
+    expect(finalTimelineState!.clipStates[0].timeState.runCount).toBe(1);
+    expect(finalTimelineState!.clipStates[0].timeState.runTime).toBe(1);
 
-    expect(finalTimelineState!.clips[1].status).toBe(TimeStatus.Running);
-    expect(finalTimelineState!.clips[1].time.runCount).toBe(1);
-    expect(finalTimelineState!.clips[1].time.runTime).toBe(1);
+    expect(finalTimelineState!.clipStates[1].timeStatus).toBe(
+      TimeStatus.Running
+    );
+    expect(finalTimelineState!.clipStates[1].timeState.runCount).toBe(1);
+    expect(finalTimelineState!.clipStates[1].timeState.runTime).toBe(1);
   });
 
   it("sadly throws when params mismatched", () => {
     const timelineParams: TimelineParams = {
-      clips: [
+      clipParams: [
         {
           startTime: 0,
           endTime: 1,
