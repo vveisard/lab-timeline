@@ -1,3 +1,5 @@
+// @region-start
+
 /**
  * Status for an object with time.
  */
@@ -6,6 +8,12 @@ enum TimeStatus {
   Running,
   Completed,
 }
+
+export { TimeStatus };
+
+// @region-end
+
+// @region-start
 
 /**
  * State for an object with time.
@@ -24,6 +32,12 @@ interface TimeState {
   readonly runCount: number | null;
 }
 
+export { type TimeState };
+
+// @region-end
+
+// @region-start
+
 /**
  * Params for a clip in a timeline.
  */
@@ -40,6 +54,63 @@ interface ClipParams {
   readonly endTime: number;
 }
 
+namespace ClipParams {
+  export function validate(
+    self: ClipParams,
+    clipName?: string
+  ): Error | undefined {
+    if (self.endTime < self.startTime) {
+      return new Error(`Invalid argument! ${clipName}: endTime < startTime`);
+    }
+
+    if (self.startTime < 0) {
+      return new Error(`Invalid argument! ${clipName}: startTime < 0`);
+    }
+
+    if (self.endTime < 0) {
+      return new Error(`Invalid argument! ${clipName}: endTime < 0`);
+    }
+
+    if (Number.isNaN(self.startTime)) {
+      return new Error(`Invalid argument! ${clipName}: startTime Number.isNaN`);
+    }
+
+    if (Number.isNaN(self.endTime)) {
+      return new Error(`Invalid argument! ${clipName}: endTime Number.isNaN`);
+    }
+
+    if (!Number.isFinite(self.startTime)) {
+      return new Error(
+        `Invalid argument! ${clipName}: startTime !Number.isFinite`
+      );
+    }
+
+    if (!Number.isFinite(self.endTime)) {
+      return new Error(
+        `Invalid argument! ${clipName}: endTime !Number.isFinite`
+      );
+    }
+
+    return undefined;
+  }
+}
+
+export { ClipParams };
+
+// @region-end
+
+// @region-start
+
+/**
+ * Parameters for a timeline.
+ */
+interface TimelineParams {
+  /**
+   * Parameters for clips in this timeline, by clip index.
+   */
+  readonly clipParams: Array<ClipParams>;
+}
+
 /**
  * Functions for {@link TimelineWorld}.
  */
@@ -53,44 +124,6 @@ namespace TimelineParams {
       // TODO move to "validateClipParams" function
       const iClipParam = someClipParams[i];
 
-      if (iClipParam.endTime < iClipParam.startTime) {
-        throw new Error(
-          `Invalid argument! Clip at index ${i}: endTime < startTime`
-        );
-      }
-
-      if (iClipParam.startTime < 0) {
-        throw new Error(`Invalid argument! Clip at index ${i}: startTime < 0`);
-      }
-
-      if (iClipParam.endTime < 0) {
-        throw new Error(`Invalid argument! Clip at index ${i}: endTime < 0`);
-      }
-
-      if (Number.isNaN(iClipParam.startTime)) {
-        throw new Error(
-          `Invalid argument! Clip at index ${i}: startTime Number.isNaN`
-        );
-      }
-
-      if (Number.isNaN(iClipParam.endTime)) {
-        throw new Error(
-          `Invalid argument! Clip at index ${i}: endTime Number.isNaN`
-        );
-      }
-
-      if (!Number.isFinite(iClipParam.startTime)) {
-        throw new Error(
-          `Invalid argument! Clip at index ${i}: startTime !Number.isFinite`
-        );
-      }
-
-      if (!Number.isFinite(iClipParam.endTime)) {
-        throw new Error(
-          `Invalid argument! Clip at index ${i}: endTime !Number.isFinite`
-        );
-      }
-
       continue;
     }
 
@@ -99,6 +132,12 @@ namespace TimelineParams {
     };
   }
 }
+
+export { TimelineParams };
+
+// @region-end
+
+// @region-start
 
 /**
  * State for a clip in a timeline.
@@ -124,15 +163,9 @@ namespace ClipState {
   }
 }
 
-/**
- * Parameters for a timeline.
- */
-interface TimelineParams {
-  /**
-   * Parameters for clips in this timeline, by clip index.
-   */
-  readonly clipParams: Array<ClipParams>;
-}
+export { ClipState };
+
+// @region-end
 
 // @region-start
 
@@ -310,4 +343,6 @@ namespace TimelineState {
   }
 }
 
-export { type TimeState, ClipState, TimeStatus, TimelineParams, TimelineState };
+export { TimelineState };
+
+// @region-end
