@@ -1,6 +1,7 @@
 import { expect, it, describe } from "bun:test";
 //
 import {
+  ClipParamsRunType,
   TimeStatus,
   TimelineState,
   type TimelineParams,
@@ -11,6 +12,7 @@ describe("TimelineState.update", () => {
     const timelineParams: TimelineParams = {
       clipParams: [
         {
+          clipRunType: ClipParamsRunType.RunTime,
           startTime: 0,
           endTime: 1,
         },
@@ -39,10 +41,12 @@ describe("TimelineState.update", () => {
     const timelineParams: TimelineParams = {
       clipParams: [
         {
+          clipRunType: ClipParamsRunType.RunTime,
           startTime: 0,
           endTime: 1,
         },
         {
+          clipRunType: ClipParamsRunType.RunTime,
           startTime: 1,
           endTime: 2,
         },
@@ -77,6 +81,7 @@ describe("TimelineState.update", () => {
     const timelineParams: TimelineParams = {
       clipParams: [
         {
+          clipRunType: ClipParamsRunType.RunTime,
           startTime: 0,
           endTime: 1,
         },

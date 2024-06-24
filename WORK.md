@@ -1,45 +1,9 @@
-# EPIC usage example
+# STORY
 
-## STORY as a user, I want a complex usage example
+test for run count
 
-### ACCEPTANCE
+# STORY
 
-I will know this is working when:
+looping progress
 
-I can replicate Sonic Rush Adventure cutscenes
-
-### DESIGN
-
-Single threaded.
-
-- a "dialog graphics world" to contain all the character entities
-- dialog 2d graphics actor state with:
-
-  - sprite asset id
-  - sprite screen transform
-  - sprite screen saturation
-
-- a "dialog frontend world" world to contain
-
-  - dialog box title text
-  - dialog box content text
-
-- a requestAnimationFrame
-
-  - renders the dialog graphics world to the canvas
-
-- some series of timelines (there's no need for "instructions")
-
-### TODO
-
-create a graphics world with "character content" in the resources. charater content has an asset manifest which are urls for the assets
-
----
-
-# STORY As a user, I want startCount and endCount for params, so that I can control when a task starts
-
-Currently tasks only have "time". instead, we would like tasks to optionally have "count" instead
-
-## DESIGN
-
-It's unclear if both bounds can both be defined. ie, is `startTime` and `startCount` valid? what would happen? I think you should only be able to specify time or count for both bounds at once, not mix and match or combine.
+# ACTION create package on gitlab

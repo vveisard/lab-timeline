@@ -39,16 +39,26 @@ export { type TimeState };
 // @region-start
 
 /**
+ * Run time for clip params.
+ */
+enum ClipParamsRunType {
+  RunTime,
+  RunCount,
+}
+
+/**
  * Params for a clip in a timeline.
+ * Has a start run time, and an end
  */
 interface ClipParams {
+  readonly clipRunType: ClipParamsRunType;
   /**
-   * Time (wrt the timeline) when the clip should start.
+   * Time (of the timeline) when the clip should start.
    */
   readonly startTime: number;
 
   /**
-   * Time (wrt timeline) when the clip should end.
+   * Time (of the timeline) when the clip should end.
    * ie, the time (greater or equals) when the clip should start.
    */
   readonly endTime: number;
@@ -59,7 +69,7 @@ namespace ClipParams {
     self: ClipParams,
     clipName?: string
   ): Error | undefined {
-    if (self.endTime < self.startTime) {
+    if (self.endTime !== undefined && self.endTime < self.startTime) {
       return new Error(`Invalid argument! ${clipName}: endTime < startTime`);
     }
 
@@ -95,7 +105,7 @@ namespace ClipParams {
   }
 }
 
-export { ClipParams };
+export { ClipParamsRunType, ClipParams };
 
 // @region-end
 
@@ -149,17 +159,35 @@ interface ClipState {
 }
 
 namespace ClipState {
+  /**
+   * Range of [0-1].
+   */
   export function getNormalizedClipTime(
     clipState: ClipState,
     clipParams: ClipParams
   ): number {
-    if (clipState.timeState.runTime === null) {
-      throw new Error(`Invalid state!`);
+    switch (clipParams.clipRunType) {
+      case ClipParamsRunType.RunCount: {
+        if (clipState.timeState.runCount === null) {
+          throw new Error(`Invalid state!`);
+        }
+
+        return (
+          (clipState.timeState.runCount - clipParams.startTime) /
+          (clipParams.endTime - clipParams.startTime)
+        );
+      }
+      case ClipParamsRunType.RunTime: {
+        if (clipState.timeState.runTime === null) {
+          throw new Error(`Invalid state!`);
+        }
+
+        return (
+          (clipState.timeState.runTime - clipParams.startTime) /
+          (clipParams.endTime - clipParams.startTime)
+        );
+      }
     }
-    return (
-      (clipState.timeState.runTime - clipParams.startTime) /
-      (clipParams.endTime - clipParams.startTime)
-    );
   }
 }
 
@@ -272,7 +300,12 @@ namespace TimelineState {
 
       // start clip
       if (iVarClipState.timeStatus === TimeStatus.None) {
-        if (varTimelineState.timeState.runTime! >= iClipParams.startTime) {
+        if (
+          (iClipParams.clipRunType === ClipParamsRunType.RunTime &&
+            varTimelineState.timeState.runTime! >= iClipParams.startTime) ||
+          (iClipParams.clipRunType === ClipParamsRunType.RunCount &&
+            varTimelineState.timeState.runCount! >= iClipParams.startTime)
+        ) {
           iVarClipState = {
             timeStatus: TimeStatus.Running,
             timeState: {
@@ -308,7 +341,12 @@ namespace TimelineState {
         };
 
         // complete clip
-        if (varTimelineState.timeState.runTime! >= iClipParams.endTime) {
+        if (
+          (iClipParams.clipRunType === ClipParamsRunType.RunTime &&
+            varTimelineState.timeState.runTime! >= iClipParams.endTime) ||
+          (iClipParams.clipRunType === ClipParamsRunType.RunCount &&
+            varTimelineState.timeState.runCount! >= iClipParams.endTime)
+        ) {
           iVarClipState = {
             ...iVarClipState,
             timeStatus: TimeStatus.Completed,

@@ -20,6 +20,7 @@
     "@negabyte-studios/lib-entity": "file:../../packages/@negabyte-studios+lib-entity",
     "@negabyte-studios/lib-math": "file:../../packages/@negabyte-studios+lib-math",
     "@negabyte-studios/lib-timeline": "file:../../packages/@negabyte-studios+lib-timeline",
+    "@solidjs/router": "^0.13.6",
     "solid-js": "^1.8.11"
   }
 }
