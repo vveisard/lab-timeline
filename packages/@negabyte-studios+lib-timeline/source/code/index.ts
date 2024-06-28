@@ -46,9 +46,9 @@ interface TimeState {
   readonly status: TimeStatus;
   /**
    * Amount of time into section from the "start" bound.
-   * `null` when not into this section.
+   * negative when time is before this section.
    */
-  readonly inTime: number | null;
+  readonly inTime: number;
 }
 
 namespace TimeState {
@@ -65,7 +65,7 @@ namespace TimeState {
         if (time < sectionDatas.leftBoundTime) {
           return {
             status: TimeStatus.Before,
-            inTime: null,
+            inTime: time - sectionDatas.leftBoundTime,
           };
         }
 
@@ -99,7 +99,7 @@ namespace TimeState {
         if (time > sectionDatas.rightBoundTime) {
           return {
             status: TimeStatus.Before,
-            inTime: null,
+            inTime: sectionDatas.rightBoundTime - time,
           };
         }
 

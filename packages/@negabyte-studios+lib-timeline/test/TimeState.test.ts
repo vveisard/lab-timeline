@@ -16,7 +16,7 @@ describe(`TimeState.createFromSectionDatas`, () => {
 
     const timeState = TimeState.create(sectionDatas, 5, TimeDirection.Right);
 
-    expect(timeState.inTime).toBe(null);
+    expect(timeState.inTime).toBe(-5);
     expect(timeState.status).toBe(TimeStatus.Before);
   });
 
@@ -124,7 +124,7 @@ describe(`TimeState.createFromSectionDatas`, () => {
 
     const timeState = TimeState.create(sectionDatas, 25, TimeDirection.Left);
 
-    expect(timeState.inTime).toBe(null);
+    expect(timeState.inTime).toBe(-5);
     expect(timeState.status).toBe(TimeStatus.Before);
   });
 });
