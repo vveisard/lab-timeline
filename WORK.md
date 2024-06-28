@@ -1,9 +1,4 @@
-# STORY refactor SectionTimeState.create to SectionData.getInTime
-
-## TODO tests
-
 ---
-
 # STORY add more time properties to SectionTimeState
 
 ## TODO
@@ -11,13 +6,11 @@
 - rightTime: time to the right, measured from the left bound. can be negative.
 - leftTime: time to the left, measured from the right bound. can be negative.
 - outTime: time towards the end bound. "remaining time". can be negative.
-
 ## TODO implement getLeftTime and write tests
 
 ## TODO implement getRightTime and write tests
 
 ## TODO implement getOutTime and write tests
-
 ---
 
 # STORY
