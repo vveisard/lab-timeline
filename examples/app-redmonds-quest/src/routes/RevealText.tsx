@@ -164,7 +164,7 @@ const RevealTextExampleRoute: Component = () => {
     function handleAnimationFrame() {
       const nextTimelineState = TimelineState.create(
         timelineSectionDatas,
-        graphicsWorld.store.timelineState.timeState.inTime + 1,
+        graphicsWorld.store.timelineState.time + 1,
         TimeDirection.Right
       );
 
@@ -182,11 +182,17 @@ const RevealTextExampleRoute: Component = () => {
 
         switch (iTaskEntityState.taskType) {
           case GraphicsTaskTypeEnum.RevealTextUsingTimeline: {
+            if (
+              iTaskTargetTimelineSectionState.timeState.status ===
+              TimeStatus.BeforeStart
+            ) {
+              continue;
+            }
+
             const nextText = iTaskEntityState.desiredText.slice(
               0,
               iTaskTargetTimelineSectionState.timeState.inTime
             );
-
             graphicsWorld.store.setEntitiesState(
               produce<DeepMutable<GraphicsWorldEntitiesState>>(
                 (state) => (state.dialogBox.text = nextText)
@@ -205,7 +211,11 @@ const RevealTextExampleRoute: Component = () => {
       GraphicsWorld.renderCanvas(graphicsWorld);
 
       // timeline is over, do not update any more
-      if (nextTimelineState.timeState.status === TimeStatus.After) {
+      if (
+        nextTimelineState.sectionStates.every(
+          (i) => i.timeState.status === TimeStatus.AfterEnd
+        )
+      ) {
         return;
       }
 

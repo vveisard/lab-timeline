@@ -213,7 +213,7 @@ const AnimateTransformExampleRoute: Component = () => {
     function handleAnimationFrame() {
       const nextTimelineState = TimelineState.create(
         timelineSectionDatas,
-        graphicsWorld.store.timelineState.timeState.inTime + 1000 / 60,
+        graphicsWorld.store.timelineState.time + 1000 / 60,
         TimeDirection.Right
       );
 
@@ -222,30 +222,34 @@ const AnimateTransformExampleRoute: Component = () => {
         const iTaskEntityState =
           graphicsWorld.store.entitiesState.tasks.states[iTaskEntityId];
 
+        const iTaskTargetTimelineSectionState =
+          graphicsWorld.store.timelineState.sectionStates[
+            iTaskEntityState.targetTimelineSectionIndex
+          ];
+
         switch (iTaskEntityState.taskType) {
           case GraphicsTaskTypeEnum.AnimateCharacterPositionUsingTimeline: {
             const iTaskTargetTimelineSectionDatas =
               timelineSectionDatas[iTaskEntityState.targetTimelineSectionIndex];
 
-            const iNextTaskTargetTimelineSectionState =
-              graphicsWorld.store.timelineState.sectionStates[
-                iTaskEntityState.targetTimelineSectionIndex
-              ];
-
             if (
-              iNextTaskTargetTimelineSectionState.timeState.status ===
-              TimeStatus.Before
+              iTaskTargetTimelineSectionState.timeState.status ===
+              TimeStatus.BeforeStart
             ) {
               continue;
             }
 
-            const iNextTaskTimelineSectionProgress = Float64.getProgress(
-              nextTimelineState.timeState.inTime,
-              iTaskTargetTimelineSectionDatas.leftBoundTime,
-              iTaskTargetTimelineSectionDatas.rightBoundTime
+            const iNextTaskTimelineSectionProgress = Float64.clamp(
+              Float64.getProgress(
+                nextTimelineState.time,
+                iTaskTargetTimelineSectionDatas.leftBoundTime,
+                iTaskTargetTimelineSectionDatas.rightBoundTime
+              ),
+              0,
+              1.0
             );
 
-            const iNextTaskPosition = Point2dFloat64.interpolatePosition(
+            const iNextTaskPosition = Point2dFloat64.interpolatePositionClamped(
               iTaskEntityState.positionStart,
               iTaskEntityState.positionEnd,
               iNextTaskTimelineSectionProgress
@@ -274,7 +278,11 @@ const AnimateTransformExampleRoute: Component = () => {
       GraphicsWorld.renderCanvas(graphicsWorld);
 
       // timeline is over, do not update any more
-      if (nextTimelineState.timeState.status === TimeStatus.After) {
+      if (
+        nextTimelineState.sectionStates.every(
+          (i) => i.timeState.status === TimeStatus.AfterEnd
+        )
+      ) {
         return;
       }
 

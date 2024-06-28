@@ -11,9 +11,16 @@ namespace Float64 {
   ): Float64 {
     return (value - minBound) / (maxBound - minBound);
   }
-  export function interpolate(start: Float64, end: Float64, t: Float64) {
-    t = Math.max(0, Math.min(1, t));
-    return start * (1 - t) + end * t;
+  export function interpolate(
+    start: Float64,
+    end: Float64,
+    interpolant: Float64
+  ) {
+    return start * (1 - interpolant) + end * interpolant;
+  }
+
+  export function clamp(self: Float64, min: Float64, max: Float64) {
+    return Math.min(Math.max(self, min), max);
   }
 }
 
@@ -25,7 +32,7 @@ namespace Point2dFloat64 {
   /**
    * Interpolate between start and end position.
    */
-  export function interpolatePosition(
+  export function interpolatePositionClamped(
     startPosition: Point2dFloat64,
     endPosition: Point2dFloat64,
     interpolant: Float64

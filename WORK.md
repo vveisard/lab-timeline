@@ -1,10 +1,40 @@
-# STORY more time properties in time state
+# STORY refactor SectionTimeState.create to SectionData.getInTime
+
+## TODO tests
+
+---
+
+# STORY add more time properties to SectionTimeState
 
 ## TODO
 
-- leftTime: time measured from the left bound, in direction of time
-- rightTime: time measured from the right bound, in direction of time
-- outTime: time towards the end bound. "remaining time"
+- rightTime: time to the right, measured from the left bound. can be negative.
+- leftTime: time to the left, measured from the right bound. can be negative.
+- outTime: time towards the end bound. "remaining time". can be negative.
+
+## TODO implement getLeftTime and write tests
+
+## TODO implement getRightTime and write tests
+
+## TODO implement getOutTime and write tests
+
+---
+
+# STORY
+
+I want to add "bounds behavior" to section data which describes how time behaves when out of bounds of section
+This bound behavior
+
+## TODO create BoundBehavior enum
+
+- None (when overflowing in this direction, time is `null`)
+- Free (when overflowing in this direction, inTime has no constraints)
+- Clamp (when overflowing in this direction, inTime is clamped to [0, duration])
+- Wrap (when overflowing in this direction, inTime is wrapped to the range of [0, duration])
+
+## TODO add bound behavior param to getInTime, getOutTime, getLeftTime, and getRightTime
+
+## TODO write tests
 
 ---
 

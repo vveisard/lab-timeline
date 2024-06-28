@@ -1,5 +1,7 @@
 // @region-start
 
+import { Float64 } from "@negabyte-studios/lib-math";
+
 /**
  * Relative to the time direction.
  */
@@ -13,13 +15,13 @@ enum TimeStatus {
    * When time direction is right, time is right of the right bound.
    * When time direction is left, time is left of the left bound.
    */
-  Before,
+  BeforeStart,
   /**
    * time is after end bound.
    * When time direction is right, time is right of the right bound.
    * When time direction is left, time is left of the left bound.
    */
-  After,
+  AfterEnd,
 }
 
 export { TimeStatus };
@@ -40,110 +42,7 @@ export { TimeDirection };
 // @region-start
 
 /**
- * State for an object with time.
- */
-interface TimeState {
-  readonly status: TimeStatus;
-  /**
-   * Amount of time into section from the "start" bound.
-   * negative when time is before this section.
-   */
-  readonly inTime: number;
-}
-
-namespace TimeState {
-  /**
-   * Create {@link TimeState} from a {@link SectionData}.
-   */
-  export function create(
-    sectionDatas: SectionData,
-    time: number,
-    timeDirection: number
-  ): TimeState {
-    switch (timeDirection) {
-      case TimeDirection.Right: {
-        if (time < sectionDatas.leftBoundTime) {
-          return {
-            status: TimeStatus.Before,
-            inTime: time - sectionDatas.leftBoundTime,
-          };
-        }
-
-        if (time === sectionDatas.leftBoundTime) {
-          return {
-            status: TimeStatus.In,
-            inTime: 0,
-          };
-        }
-
-        if (time === sectionDatas.rightBoundTime) {
-          return {
-            status: TimeStatus.In,
-            inTime: sectionDatas.rightBoundTime - sectionDatas.leftBoundTime,
-          };
-        }
-
-        if (time > sectionDatas.rightBoundTime) {
-          return {
-            status: TimeStatus.After,
-            inTime: sectionDatas.rightBoundTime - sectionDatas.leftBoundTime,
-          };
-        }
-
-        return {
-          status: TimeStatus.In,
-          inTime: time - sectionDatas.leftBoundTime,
-        };
-      }
-      case TimeDirection.Left: {
-        if (time > sectionDatas.rightBoundTime) {
-          return {
-            status: TimeStatus.Before,
-            inTime: sectionDatas.rightBoundTime - time,
-          };
-        }
-
-        if (time < sectionDatas.leftBoundTime) {
-          return {
-            status: TimeStatus.After,
-            inTime: sectionDatas.rightBoundTime - sectionDatas.leftBoundTime,
-          };
-        }
-
-        if (time === sectionDatas.leftBoundTime) {
-          return {
-            status: TimeStatus.In,
-            inTime: sectionDatas.leftBoundTime,
-          };
-        }
-
-        if (time === sectionDatas.rightBoundTime) {
-          return {
-            status: TimeStatus.In,
-            inTime: 0,
-          };
-        }
-
-        return {
-          status: TimeStatus.In,
-          inTime: sectionDatas.rightBoundTime - time,
-        };
-      }
-      default: {
-        throw new Error(`Invalid state!`);
-      }
-    }
-  }
-}
-
-export { TimeState };
-
-// @region-end
-
-// @region-start
-
-/**
- * Params for a section in a timeline.
+ * Data for a section in a timeline.
  */
 interface SectionData {
   /**
@@ -214,15 +113,112 @@ export { SectionData };
 // @region-start
 
 /**
+ * State of time for a {@link SectionState}.
+ */
+interface SectionTimeState {
+  readonly status: TimeStatus;
+  /**
+   * Amount of time into the section, measured from the "start" bound.
+   * negative when time is before this section.
+   */
+  readonly inTime: number;
+}
+
+namespace SectionTimeState {
+  /**
+   * Create {@link SectionTimeState} from a {@link SectionData}.
+   */
+  export function create(
+    sectionData: SectionData,
+    time: number,
+    timeDirection: number
+  ): SectionTimeState {
+    switch (timeDirection) {
+      case TimeDirection.Right: {
+        if (time < sectionData.leftBoundTime) {
+          return {
+            status: TimeStatus.BeforeStart,
+            inTime: time - sectionData.leftBoundTime,
+          };
+        }
+
+        if (time === sectionData.leftBoundTime) {
+          return {
+            status: TimeStatus.In,
+            inTime: 0,
+          };
+        }
+
+        if (time === sectionData.rightBoundTime) {
+          return {
+            status: TimeStatus.In,
+            inTime: sectionData.rightBoundTime - sectionData.leftBoundTime,
+          };
+        }
+
+        if (time > sectionData.rightBoundTime) {
+          return {
+            status: TimeStatus.AfterEnd,
+            inTime: sectionData.rightBoundTime - sectionData.leftBoundTime,
+          };
+        }
+
+        return {
+          status: TimeStatus.In,
+          inTime: time - sectionData.leftBoundTime,
+        };
+      }
+      case TimeDirection.Left: {
+        if (time > sectionData.rightBoundTime) {
+          return {
+            status: TimeStatus.BeforeStart,
+            inTime: sectionData.rightBoundTime - time,
+          };
+        }
+
+        if (time < sectionData.leftBoundTime) {
+          return {
+            status: TimeStatus.AfterEnd,
+            inTime: sectionData.rightBoundTime - sectionData.leftBoundTime,
+          };
+        }
+
+        if (time === sectionData.leftBoundTime) {
+          return {
+            status: TimeStatus.In,
+            inTime: sectionData.leftBoundTime,
+          };
+        }
+
+        if (time === sectionData.rightBoundTime) {
+          return {
+            status: TimeStatus.In,
+            inTime: 0,
+          };
+        }
+
+        return {
+          status: TimeStatus.In,
+          inTime: sectionData.rightBoundTime - time,
+        };
+      }
+      default: {
+        throw new Error(`Invalid state!`);
+      }
+    }
+  }
+}
+
+/**
  * State for a section in a timeline.
  */
 interface SectionState {
-  readonly timeState: TimeState;
+  readonly timeState: SectionTimeState;
 }
 
 namespace SectionState {
   /**
-   * Create state of a section in a timeline.
+   * Create new {@link SectionState}.
    */
   export function create(
     sectionDatas: SectionData,
@@ -230,7 +226,7 @@ namespace SectionState {
     timelineTimeDirection: TimeDirection
   ): SectionState {
     return {
-      timeState: TimeState.create(
+      timeState: SectionTimeState.create(
         sectionDatas,
         timelineTime,
         timelineTimeDirection
@@ -239,7 +235,7 @@ namespace SectionState {
   }
 }
 
-export { SectionState };
+export { SectionState, SectionTimeState };
 
 // @region-end
 
@@ -249,7 +245,8 @@ export { SectionState };
  * State for a timeline.
  */
 interface TimelineState {
-  readonly timeState: TimeState;
+  readonly time: number;
+  readonly timeDirection: TimeDirection;
   readonly sectionStates: Array<SectionState>;
 }
 
@@ -269,31 +266,9 @@ namespace TimelineState {
       SectionState.create(i, timelineTime, timelineTimeDirection)
     );
 
-    if (sectionStates.every((i) => i.timeState.status === TimeStatus.After)) {
-      return {
-        timeState: {
-          inTime: timelineTime,
-          status: TimeStatus.After,
-        },
-        sectionStates: sectionStates,
-      };
-    }
-
-    if (sectionStates.every((i) => i.timeState.status === TimeStatus.Before)) {
-      return {
-        timeState: {
-          inTime: timelineTime,
-          status: TimeStatus.Before,
-        },
-        sectionStates: sectionStates,
-      };
-    }
-
     return {
-      timeState: {
-        inTime: timelineTime,
-        status: TimeStatus.In,
-      },
+      time: timelineTime,
+      timeDirection: timelineTimeDirection,
       sectionStates: sectionStates,
     };
   }
