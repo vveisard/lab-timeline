@@ -1,18 +1,18 @@
 import { expect, it, describe } from "bun:test";
 //
 import {
-  ClipParamsRunType,
+  SectionParamsRunType,
   TimeStatus,
   TimelineState,
   type TimelineParams,
 } from "../source/code/index.ts";
 
-describe("TimelineState.update", () => {
-  it("happily completes clip and timeline", () => {
+describe("TimelineState.update with SectionParamsRunTime.RunTime", () => {
+  it("happily completes section and timeline", () => {
     const timelineParams: TimelineParams = {
-      clipParams: [
+      sectionParams: [
         {
-          clipRunType: ClipParamsRunType.RunTime,
+          sectionRunType: SectionParamsRunType.RunTime,
           startTime: 0,
           endTime: 1,
         },
@@ -30,23 +30,23 @@ describe("TimelineState.update", () => {
     expect(finalTimelineState).not.toBe(baseTimelineState);
     expect(finalTimelineState!.timeStatus).toBe(TimeStatus.Completed);
 
-    expect(finalTimelineState!.clipStates[0].timeStatus).toBe(
+    expect(finalTimelineState!.sectionStates[0].timeStatus).toBe(
       TimeStatus.Completed
     );
-    expect(finalTimelineState!.clipStates[0].timeState.runCount).toBe(1);
-    expect(finalTimelineState!.clipStates[0].timeState.runTime).toBe(1);
+    expect(finalTimelineState!.sectionStates[0].timeState.runCount).toBe(1);
+    expect(finalTimelineState!.sectionStates[0].timeState.runTime).toBe(1);
   });
 
-  it("happily completes clip 0, continues clip 1, and continues timeline", () => {
+  it("happily completes section 0, continues section 1, and continues timeline", () => {
     const timelineParams: TimelineParams = {
-      clipParams: [
+      sectionParams: [
         {
-          clipRunType: ClipParamsRunType.RunTime,
+          sectionRunType: SectionParamsRunType.RunTime,
           startTime: 0,
           endTime: 1,
         },
         {
-          clipRunType: ClipParamsRunType.RunTime,
+          sectionRunType: SectionParamsRunType.RunTime,
           startTime: 1,
           endTime: 2,
         },
@@ -64,24 +64,24 @@ describe("TimelineState.update", () => {
     expect(finalTimelineState).not.toBe(baseTimelineState);
     expect(finalTimelineState!.timeStatus).toBe(TimeStatus.Running);
 
-    expect(finalTimelineState!.clipStates[0].timeStatus).toBe(
+    expect(finalTimelineState!.sectionStates[0].timeStatus).toBe(
       TimeStatus.Completed
     );
-    expect(finalTimelineState!.clipStates[0].timeState.runCount).toBe(1);
-    expect(finalTimelineState!.clipStates[0].timeState.runTime).toBe(1);
+    expect(finalTimelineState!.sectionStates[0].timeState.runCount).toBe(1);
+    expect(finalTimelineState!.sectionStates[0].timeState.runTime).toBe(1);
 
-    expect(finalTimelineState!.clipStates[1].timeStatus).toBe(
+    expect(finalTimelineState!.sectionStates[1].timeStatus).toBe(
       TimeStatus.Running
     );
-    expect(finalTimelineState!.clipStates[1].timeState.runCount).toBe(1);
-    expect(finalTimelineState!.clipStates[1].timeState.runTime).toBe(1);
+    expect(finalTimelineState!.sectionStates[1].timeState.runCount).toBe(1);
+    expect(finalTimelineState!.sectionStates[1].timeState.runTime).toBe(1);
   });
 
   it("sadly throws when params mismatched", () => {
     const timelineParams: TimelineParams = {
-      clipParams: [
+      sectionParams: [
         {
-          clipRunType: ClipParamsRunType.RunTime,
+          sectionRunType: SectionParamsRunType.RunTime,
           startTime: 0,
           endTime: 1,
         },

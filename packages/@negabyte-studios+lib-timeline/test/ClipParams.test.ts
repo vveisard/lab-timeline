@@ -1,13 +1,13 @@
 import { expect, it, describe } from "bun:test";
 //
-import { AnyClipParams } from "../source/code/index.ts";
+import { AnySectionParams } from "../source/code/index.ts";
 
-describe(AnyClipParams.validate.name, () => {
+describe(AnySectionParams.validate.name, () => {
   // TODO happy
 
   it("throws when startTime is NaN ", () => {
     expect(() =>
-      AnyClipParams.validate({
+      AnySectionParams.validate({
         startRunTime: Number.NaN,
         endRunTime: 0,
       })
@@ -16,7 +16,7 @@ describe(AnyClipParams.validate.name, () => {
 
   it("throws when endTime is NaN ", () => {
     expect(() =>
-      AnyClipParams.validate({
+      AnySectionParams.validate({
         startRunTime: 0,
         endRunTime: Number.NaN,
       })
@@ -25,7 +25,7 @@ describe(AnyClipParams.validate.name, () => {
 
   it("throws when startTime is Number.POSITIVE_INFINITY ", () => {
     expect(() =>
-      AnyClipParams.validate({
+      AnySectionParams.validate({
         startRunTime: Number.POSITIVE_INFINITY,
         endRunTime: 0,
       })
@@ -34,7 +34,7 @@ describe(AnyClipParams.validate.name, () => {
 
   it("throws when startTime is Number.NEGATIVE_INFINITY ", () => {
     expect(() =>
-      AnyClipParams.validate({
+      AnySectionParams.validate({
         startRunTime: Number.NEGATIVE_INFINITY,
         endRunTime: 0,
       })
@@ -43,7 +43,7 @@ describe(AnyClipParams.validate.name, () => {
 
   it("throws when endTime is Number.POSITIVE_INFINITY ", () => {
     expect(() =>
-      AnyClipParams.validate({
+      AnySectionParams.validate({
         startRunTime: 0,
         endRunTime: Number.POSITIVE_INFINITY,
       })
@@ -52,7 +52,7 @@ describe(AnyClipParams.validate.name, () => {
 
   it("throws when endTime is Number.NEGATIVE_INFINITY ", () => {
     expect(() =>
-      AnyClipParams.validate({
+      AnySectionParams.validate({
         startRunTime: 0,
         endRunTime: Number.NEGATIVE_INFINITY,
       })
@@ -61,7 +61,7 @@ describe(AnyClipParams.validate.name, () => {
 
   it("throws when endTime < 0 ", () => {
     expect(() =>
-      AnyClipParams.validate({
+      AnySectionParams.validate({
         startRunTime: 0,
         endRunTime: -1,
       })
@@ -70,7 +70,7 @@ describe(AnyClipParams.validate.name, () => {
 
   it("throws when startTime < 0 ", () => {
     expect(() =>
-      AnyClipParams.validate({
+      AnySectionParams.validate({
         startRunTime: -1,
         endRunTime: 0,
       })
@@ -79,7 +79,7 @@ describe(AnyClipParams.validate.name, () => {
 
   it("throws when startTime > endTime ", () => {
     expect(() =>
-      AnyClipParams.validate({
+      AnySectionParams.validate({
         startRunTime: 1,
         endRunTime: 0,
       })

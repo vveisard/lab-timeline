@@ -14,7 +14,7 @@ import {
   TimelineState,
   TimelineParams,
   TimeStatus,
-  ClipParamsRunType,
+  SectionParamsRunType,
 } from "@negabyte-studios/lib-timeline";
 
 /**
@@ -31,27 +31,27 @@ interface GraphicsWorldEntitiesState {
 }
 
 enum GraphicsTaskTypeEnum {
-  AnimateCharacterPositionTimelineClip,
+  AnimateCharacterPositionTimelineSection,
 }
 
 interface BaseGraphicsTaskState {
   readonly taskType: GraphicsTaskTypeEnum;
 }
 
-interface AnimateCharacterPositionUsingTimelineClipTaskState
+interface AnimateCharacterPositionUsingTimelineSectionTaskState
   extends BaseGraphicsTaskState {
-  readonly taskType: GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip;
+  readonly taskType: GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineSection;
   /**
-   * Index of the target timeline clip to use.
+   * Index of the target timeline section to use.
    */
-  readonly targetTimelineClipIndex: number;
+  readonly targetTimelineSectionIndex: number;
   readonly targetCharacterEntityId: EntityId;
   readonly positionStart: Point2dFloat64;
   readonly positionEnd: Point2dFloat64;
 }
 
 type GraphicsTaskEntityState =
-  AnimateCharacterPositionUsingTimelineClipTaskState;
+  AnimateCharacterPositionUsingTimelineSectionTaskState;
 
 interface GraphicsWorldStore {
   readonly entitiesState: Store<GraphicsWorldEntitiesState>;
@@ -141,17 +141,17 @@ const AdvancedRunTimeRoute: Component = () => {
 
     const timelineParams = TimelineParams.create([
       {
-        clipRunType: ClipParamsRunType.RunTime,
+        sectionRunType: SectionParamsRunType.RunTime,
         startTime: 1000,
         endTime: 2000,
       },
       {
-        clipRunType: ClipParamsRunType.RunTime,
+        sectionRunType: SectionParamsRunType.RunTime,
         startTime: 1250,
         endTime: 2250,
       },
       {
-        clipRunType: ClipParamsRunType.RunTime,
+        sectionRunType: SectionParamsRunType.RunTime,
         startTime: 3000,
         endTime: 3500,
       },
@@ -181,32 +181,32 @@ const AdvancedRunTimeRoute: Component = () => {
           states: {
             "animate-character-position-bluford-a": {
               taskType:
-                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip,
+                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineSection,
               targetCharacterEntityId: "bluford",
               positionStart: [0, 0],
               positionEnd: [100, 100],
-              targetTimelineClipIndex: 0,
+              targetTimelineSectionIndex: 0,
             },
             "animate-character-position-redmond-a": {
               taskType:
-                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip,
+                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineSection,
               targetCharacterEntityId: "redmond",
               positionStart: [0, 0],
               positionEnd: [100, 0],
-              targetTimelineClipIndex: 1,
+              targetTimelineSectionIndex: 1,
             },
             "animate-character-position-redmond-b": {
               taskType:
-                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip,
+                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineSection,
               targetCharacterEntityId: "redmond",
               positionStart: [100, 0],
               positionEnd: [100, 100],
-              targetTimelineClipIndex: 2,
+              targetTimelineSectionIndex: 2,
             },
           },
         },
       },
-      timelineState: TimelineState.create(timelineParams.clipParams.length),
+      timelineState: TimelineState.create(timelineParams.sectionParams.length),
     });
 
     function handleAnimationFrame() {
@@ -223,32 +223,32 @@ const AdvancedRunTimeRoute: Component = () => {
         const iTaskEntityState =
           graphicsWorld.store.entitiesState.tasks.states[iTaskEntityId];
 
-        const iTaskTargetTimelineClipState =
-          graphicsWorld.store.timelineState.clipStates[
-            iTaskEntityState.targetTimelineClipIndex
+        const iTaskTargetTimelineSectionState =
+          graphicsWorld.store.timelineState.sectionStates[
+            iTaskEntityState.targetTimelineSectionIndex
           ];
 
-        if (iTaskTargetTimelineClipState.timeStatus === TimeStatus.None) {
+        if (iTaskTargetTimelineSectionState.timeStatus === TimeStatus.None) {
           continue;
         }
 
         switch (iTaskEntityState.taskType) {
-          case GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineClip: {
-            const iTaskTargetClipParams =
-              timelineParams.clipParams[
-                iTaskEntityState.targetTimelineClipIndex
+          case GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineSection: {
+            const iTaskTargetSectionParams =
+              timelineParams.sectionParams[
+                iTaskEntityState.targetTimelineSectionIndex
               ];
 
-            const taskTimelineClipProgress = Float64.getProgress(
-              iTaskTargetClipParams.startTime,
-              iTaskTargetClipParams.endTime,
-              iTaskTargetTimelineClipState.timeState.runTime
+            const taskTimelineSectionProgress = Float64.getProgress(
+              iTaskTargetSectionParams.startTime,
+              iTaskTargetSectionParams.endTime,
+              iTaskTargetTimelineSectionState.timeState.runTime
             );
 
             const nextPosition = Point2dFloat64.interpolatePosition(
               iTaskEntityState.positionStart,
               iTaskEntityState.positionEnd,
-              taskTimelineClipProgress
+              taskTimelineSectionProgress
             );
 
             graphicsWorld.store.setEntitiesState(

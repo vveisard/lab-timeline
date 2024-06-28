@@ -14,7 +14,7 @@ import {
   TimelineState,
   TimelineParams,
   TimeStatus,
-  ClipParamsRunType,
+  SectionParamsRunType,
 } from "@negabyte-studios/lib-timeline";
 
 interface DialogBoxEntityState {
@@ -34,17 +34,18 @@ interface BaseGraphicsTaskState {
   readonly taskType: GraphicsTaskTypeEnum;
 }
 
-interface RevealTextUsingTimelineClipTaskState extends BaseGraphicsTaskState {
+interface RevealTextUsingTimelineSectionTaskState
+  extends BaseGraphicsTaskState {
   readonly taskType: GraphicsTaskTypeEnum.RevealText;
   /**
-   * Index of the target timeline clip to use.
+   * Index of the target timeline section to use.
    */
-  readonly targetTimelineClipIndex: number;
+  readonly targetTimelineSectionIndex: number;
 
   readonly desiredText: string;
 }
 
-type GraphicsTaskEntityState = RevealTextUsingTimelineClipTaskState;
+type GraphicsTaskEntityState = RevealTextUsingTimelineSectionTaskState;
 
 interface GraphicsWorldStore {
   readonly entitiesState: Store<GraphicsWorldEntitiesState>;
@@ -133,7 +134,7 @@ const BasicRunCountRoute: Component = () => {
 
     const timelineParams = TimelineParams.create([
       {
-        clipRunType: ClipParamsRunType.RunCount,
+        sectionRunType: SectionParamsRunType.RunCount,
         startTime: 60,
         endTime: 60 + nextDialogBoxDesiredText.length,
       },
@@ -149,13 +150,13 @@ const BasicRunCountRoute: Component = () => {
           states: {
             "reveal-dialog-box-text": {
               taskType: GraphicsTaskTypeEnum.RevealText,
-              targetTimelineClipIndex: 0,
+              targetTimelineSectionIndex: 0,
               desiredText: nextDialogBoxDesiredText,
             },
           },
         },
       },
-      timelineState: TimelineState.create(timelineParams.clipParams.length),
+      timelineState: TimelineState.create(timelineParams.sectionParams.length),
     });
 
     function handleAnimationFrame() {
@@ -172,12 +173,12 @@ const BasicRunCountRoute: Component = () => {
         const iTaskEntityState =
           graphicsWorld.store.entitiesState.tasks.states[iTaskEntityId];
 
-        const iTaskTargetTimelineClipState =
-          graphicsWorld.store.timelineState.clipStates[
-            iTaskEntityState.targetTimelineClipIndex
+        const iTaskTargetTimelineSectionState =
+          graphicsWorld.store.timelineState.sectionStates[
+            iTaskEntityState.targetTimelineSectionIndex
           ];
 
-        if (iTaskTargetTimelineClipState.timeStatus === TimeStatus.None) {
+        if (iTaskTargetTimelineSectionState.timeStatus === TimeStatus.None) {
           continue;
         }
 
@@ -185,7 +186,7 @@ const BasicRunCountRoute: Component = () => {
           case GraphicsTaskTypeEnum.RevealText: {
             const nextText = iTaskEntityState.desiredText.slice(
               0,
-              iTaskTargetTimelineClipState.timeState.runCount
+              iTaskTargetTimelineSectionState.timeState.runCount
             );
 
             graphicsWorld.store.setEntitiesState(

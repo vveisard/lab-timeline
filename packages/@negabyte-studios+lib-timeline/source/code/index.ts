@@ -39,65 +39,69 @@ export { type TimeState };
 // @region-start
 
 /**
- * Run time for clip params.
+ * Run time for section params.
  */
-enum ClipParamsRunType {
+enum SectionParamsRunType {
   RunTime,
   RunCount,
 }
 
 /**
- * Params for a clip in a timeline.
+ * Params for a section in a timeline.
  * Has a start run time, and an end
  */
-interface ClipParams {
-  readonly clipRunType: ClipParamsRunType;
+interface SectionParams {
+  readonly sectionRunType: SectionParamsRunType;
   /**
-   * Time (of the timeline) when the clip should start.
+   * Time (of the timeline) when the section should start.
    */
   readonly startTime: number;
 
   /**
-   * Time (of the timeline) when the clip should end.
-   * ie, the time (greater or equals) when the clip should start.
+   * Time (of the timeline) when the section should end.
+   * ie, the time (greater or equals) when the section should start.
    */
   readonly endTime: number;
 }
 
-namespace ClipParams {
+namespace SectionParams {
   export function validate(
-    self: ClipParams,
-    clipName?: string
+    self: SectionParams,
+    sectionName?: string
   ): Error | undefined {
     if (self.endTime !== undefined && self.endTime < self.startTime) {
-      return new Error(`Invalid argument! ${clipName}: endTime < startTime`);
+      return new Error(`Invalid argument! ${sectionName}: endTime < startTime`);
     }
 
     if (self.startTime < 0) {
-      return new Error(`Invalid argument! ${clipName}: startTime < 0`);
+      return new Error(`Invalid argument! ${sectionName}: startTime < 0`);
     }
 
     if (self.endTime < 0) {
-      return new Error(`Invalid argument! ${clipName}: endTime < 0`);
+      return new Error(`Invalid argument! ${sectionName}: endTime < 0`);
     }
 
     if (Number.isNaN(self.startTime)) {
-      return new Error(`Invalid argument! ${clipName}: startTime Number.isNaN`);
+      return new Error(
+        `Invalid argument! ${sectionName}: startTime Number.isNaN`
+      );
     }
 
     if (Number.isNaN(self.endTime)) {
-      return new Error(`Invalid argument! ${clipName}: endTime Number.isNaN`);
+      return new Error(
+        `Invalid argument! ${sectionName}: endTime Number.isNaN`
+      );
     }
 
     if (!Number.isFinite(self.startTime)) {
       return new Error(
-        `Invalid argument! ${clipName}: startTime !Number.isFinite`
+        `Invalid argument! ${sectionName}: startTime !Number.isFinite`
       );
     }
 
     if (!Number.isFinite(self.endTime)) {
       return new Error(
-        `Invalid argument! ${clipName}: endTime !Number.isFinite`
+        `Invalid argument! ${sectionName}: endTime !Number.isFinite`
       );
     }
 
@@ -105,7 +109,7 @@ namespace ClipParams {
   }
 }
 
-export { ClipParamsRunType, ClipParams };
+export { SectionParamsRunType, SectionParams };
 
 // @region-end
 
@@ -116,9 +120,9 @@ export { ClipParamsRunType, ClipParams };
  */
 interface TimelineParams {
   /**
-   * Parameters for clips in this timeline, by clip index.
+   * Parameters for sections in this timeline, by section index.
    */
-  readonly clipParams: Array<ClipParams>;
+  readonly sectionParams: Array<SectionParams>;
 }
 
 /**
@@ -126,19 +130,21 @@ interface TimelineParams {
  */
 namespace TimelineParams {
   /**
-   * throws an error if any clip is invalid.
+   * throws an error if any section is invalid.
    */
-  export function create(someClipParams: Array<ClipParams>): TimelineParams {
-    // validate clips
-    for (let i = 0; i < someClipParams.length; i++) {
-      // TODO move to "validateClipParams" function
-      const iClipParam = someClipParams[i];
+  export function create(
+    someSectionParams: Array<SectionParams>
+  ): TimelineParams {
+    // validate sections
+    for (let i = 0; i < someSectionParams.length; i++) {
+      // TODO move to "validateSectionParams" function
+      const iSectionParam = someSectionParams[i];
 
       continue;
     }
 
     return {
-      clipParams: someClipParams,
+      sectionParams: someSectionParams,
     };
   }
 }
@@ -150,48 +156,48 @@ export { TimelineParams };
 // @region-start
 
 /**
- * State for a clip in a timeline.
+ * State for a section in a timeline.
  */
-interface ClipState {
+interface SectionState {
   readonly timeStatus: TimeStatus;
 
   readonly timeState: TimeState;
 }
 
-namespace ClipState {
+namespace SectionState {
   /**
    * Range of [0-1].
    */
-  export function getNormalizedClipTime(
-    clipState: ClipState,
-    clipParams: ClipParams
+  export function getNormalizedSectionTime(
+    sectionState: SectionState,
+    sectionParams: SectionParams
   ): number {
-    switch (clipParams.clipRunType) {
-      case ClipParamsRunType.RunCount: {
-        if (clipState.timeState.runCount === null) {
+    switch (sectionParams.sectionRunType) {
+      case SectionParamsRunType.RunCount: {
+        if (sectionState.timeState.runCount === null) {
           throw new Error(`Invalid state!`);
         }
 
         return (
-          (clipState.timeState.runCount - clipParams.startTime) /
-          (clipParams.endTime - clipParams.startTime)
+          (sectionState.timeState.runCount - sectionParams.startTime) /
+          (sectionParams.endTime - sectionParams.startTime)
         );
       }
-      case ClipParamsRunType.RunTime: {
-        if (clipState.timeState.runTime === null) {
+      case SectionParamsRunType.RunTime: {
+        if (sectionState.timeState.runTime === null) {
           throw new Error(`Invalid state!`);
         }
 
         return (
-          (clipState.timeState.runTime - clipParams.startTime) /
-          (clipParams.endTime - clipParams.startTime)
+          (sectionState.timeState.runTime - sectionParams.startTime) /
+          (sectionParams.endTime - sectionParams.startTime)
         );
       }
     }
   }
 }
 
-export { ClipState };
+export { SectionState };
 
 // @region-end
 
@@ -204,19 +210,23 @@ interface TimelineState {
   readonly timeStatus: TimeStatus;
   readonly timeState: TimeState;
   /**
-   * State for clips in this timeline, by clip index.
+   * State for sections in this timeline, by section index.
    */
-  readonly clipStates: Array<ClipState>;
+  readonly sectionStates: Array<SectionState>;
 }
 
 /**
  * Functions for {@link TimelineState}.
  */
 namespace TimelineState {
-  export function create(clipAmount: number): TimelineState {
-    const clipStates: Array<ClipState> = new Array(clipAmount);
-    for (let iClipIndex = 0; iClipIndex < clipAmount; iClipIndex++) {
-      clipStates[iClipIndex] = {
+  export function create(sectionAmount: number): TimelineState {
+    const sectionStates: Array<SectionState> = new Array(sectionAmount);
+    for (
+      let iSectionIndex = 0;
+      iSectionIndex < sectionAmount;
+      iSectionIndex++
+    ) {
+      sectionStates[iSectionIndex] = {
         timeStatus: TimeStatus.None,
         timeState: {
           runTime: null,
@@ -231,12 +241,12 @@ namespace TimelineState {
         runTime: null,
         runCount: null,
       },
-      clipStates: clipStates,
+      sectionStates: sectionStates,
     };
   }
 
   /**
-   * Update state of timeline, including all clips.
+   * Update state of timeline, including all sections.
    * Immutable state update.
    * @param deltaTime amount of time to increment all time by.
    * @returns next timeline state, or `undefined` if no-op.
@@ -247,17 +257,18 @@ namespace TimelineState {
     deltaTime: number
   ): TimelineState | undefined {
     // TODO consider using draft library (immer or structura) for immutable state updates
-    // TODO refactor each operation to its own function (advanceTimelineTime, updateClip, advanceClipTime, etc)
+    // TODO refactor each operation to its own function (advanceTimelineTime, updateSection, advanceSectionTime, etc)
 
     if (deltaTime === 0) {
       return undefined;
     }
 
     if (
-      baseTimelineState.clipStates.length !== timelineParams.clipParams.length
+      baseTimelineState.sectionStates.length !==
+      timelineParams.sectionParams.length
     ) {
       throw new Error(
-        `Invalid argument! clip count in params and state are mismatched.`
+        `Invalid argument! section count in params and state are mismatched.`
       );
     }
 
@@ -288,25 +299,25 @@ namespace TimelineState {
       };
     }
 
-    // update clips
+    // update sections
     for (
-      let iClipIndex = 0;
-      iClipIndex < baseTimelineState.clipStates.length;
-      iClipIndex++
+      let iSectionIndex = 0;
+      iSectionIndex < baseTimelineState.sectionStates.length;
+      iSectionIndex++
     ) {
-      const iClipParams = timelineParams.clipParams[iClipIndex];
-      const iBaseClipState = baseTimelineState.clipStates[iClipIndex];
-      let iVarClipState = iBaseClipState;
+      const iSectionParams = timelineParams.sectionParams[iSectionIndex];
+      const iBaseSectionState = baseTimelineState.sectionStates[iSectionIndex];
+      let iVarSectionState = iBaseSectionState;
 
-      // start clip
-      if (iVarClipState.timeStatus === TimeStatus.None) {
+      // start section
+      if (iVarSectionState.timeStatus === TimeStatus.None) {
         if (
-          (iClipParams.clipRunType === ClipParamsRunType.RunTime &&
-            varTimelineState.timeState.runTime! >= iClipParams.startTime) ||
-          (iClipParams.clipRunType === ClipParamsRunType.RunCount &&
-            varTimelineState.timeState.runCount! >= iClipParams.startTime)
+          (iSectionParams.sectionRunType === SectionParamsRunType.RunTime &&
+            varTimelineState.timeState.runTime! >= iSectionParams.startTime) ||
+          (iSectionParams.sectionRunType === SectionParamsRunType.RunCount &&
+            varTimelineState.timeState.runCount! >= iSectionParams.startTime)
         ) {
-          iVarClipState = {
+          iVarSectionState = {
             timeStatus: TimeStatus.Running,
             timeState: {
               runTime: 0,
@@ -316,59 +327,59 @@ namespace TimelineState {
 
           varTimelineState = {
             ...varTimelineState,
-            clipStates: [
-              ...varTimelineState.clipStates.slice(0, iClipIndex),
-              iVarClipState,
-              ...varTimelineState.clipStates.slice(iClipIndex + 1),
+            sectionStates: [
+              ...varTimelineState.sectionStates.slice(0, iSectionIndex),
+              iVarSectionState,
+              ...varTimelineState.sectionStates.slice(iSectionIndex + 1),
             ],
           };
         }
       }
 
-      // run clip
-      if (iVarClipState.timeStatus === TimeStatus.Running) {
-        // advance clip time
-        iVarClipState = {
-          ...iVarClipState,
+      // run section
+      if (iVarSectionState.timeStatus === TimeStatus.Running) {
+        // advance section time
+        iVarSectionState = {
+          ...iVarSectionState,
           timeState: {
-            ...iVarClipState.timeState,
+            ...iVarSectionState.timeState,
             runTime: Math.min(
-              iVarClipState.timeState.runTime! + deltaTime,
-              iClipParams.endTime
+              iVarSectionState.timeState.runTime! + deltaTime,
+              iSectionParams.endTime
             ),
-            runCount: iVarClipState.timeState.runCount! + 1,
+            runCount: iVarSectionState.timeState.runCount! + 1,
           },
         };
 
-        // complete clip
+        // complete section
         if (
-          (iClipParams.clipRunType === ClipParamsRunType.RunTime &&
-            varTimelineState.timeState.runTime! >= iClipParams.endTime) ||
-          (iClipParams.clipRunType === ClipParamsRunType.RunCount &&
-            varTimelineState.timeState.runCount! >= iClipParams.endTime)
+          (iSectionParams.sectionRunType === SectionParamsRunType.RunTime &&
+            varTimelineState.timeState.runTime! >= iSectionParams.endTime) ||
+          (iSectionParams.sectionRunType === SectionParamsRunType.RunCount &&
+            varTimelineState.timeState.runCount! >= iSectionParams.endTime)
         ) {
-          iVarClipState = {
-            ...iVarClipState,
+          iVarSectionState = {
+            ...iVarSectionState,
             timeStatus: TimeStatus.Completed,
           };
         }
 
         varTimelineState = {
           ...varTimelineState,
-          clipStates: [
-            ...varTimelineState.clipStates.slice(0, iClipIndex),
-            iVarClipState,
-            ...varTimelineState.clipStates.slice(iClipIndex + 1),
+          sectionStates: [
+            ...varTimelineState.sectionStates.slice(0, iSectionIndex),
+            iVarSectionState,
+            ...varTimelineState.sectionStates.slice(iSectionIndex + 1),
           ],
         };
       }
     }
 
     // complete timeline if
-    // - every clip is completed
+    // - every section is completed
     if (
-      varTimelineState.clipStates.every(
-        (iClipState) => iClipState.timeStatus === TimeStatus.Completed
+      varTimelineState.sectionStates.every(
+        (iSectionState) => iSectionState.timeStatus === TimeStatus.Completed
       )
     ) {
       varTimelineState = {
