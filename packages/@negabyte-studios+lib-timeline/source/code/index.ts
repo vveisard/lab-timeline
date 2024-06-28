@@ -45,7 +45,7 @@ export { TimeDirection };
 interface TimeState {
   readonly status: TimeStatus;
   /**
-   * Amount of time in this section from the "start" bound.
+   * Amount of time into section from the "start" bound.
    * `null` when not into this section.
    */
   readonly inTime: number | null;
@@ -53,71 +53,71 @@ interface TimeState {
 
 namespace TimeState {
   /**
-   * Create {@link TimeState} from a {@link SectionParams}.
+   * Create {@link TimeState} from a {@link SectionData}.
    */
   export function create(
-    sectionParams: SectionParams,
+    sectionDatas: SectionData,
     time: number,
     timeDirection: number
   ): TimeState {
     switch (timeDirection) {
       case TimeDirection.Right: {
-        if (time < sectionParams.leftBoundTime) {
+        if (time < sectionDatas.leftBoundTime) {
           return {
             status: TimeStatus.Before,
             inTime: null,
           };
         }
 
-        if (time === sectionParams.leftBoundTime) {
+        if (time === sectionDatas.leftBoundTime) {
           return {
             status: TimeStatus.In,
             inTime: 0,
           };
         }
 
-        if (time === sectionParams.rightBoundTime) {
+        if (time === sectionDatas.rightBoundTime) {
           return {
             status: TimeStatus.In,
-            inTime: sectionParams.rightBoundTime - sectionParams.leftBoundTime,
+            inTime: sectionDatas.rightBoundTime - sectionDatas.leftBoundTime,
           };
         }
 
-        if (time > sectionParams.rightBoundTime) {
+        if (time > sectionDatas.rightBoundTime) {
           return {
             status: TimeStatus.After,
-            inTime: sectionParams.rightBoundTime - sectionParams.leftBoundTime,
+            inTime: sectionDatas.rightBoundTime - sectionDatas.leftBoundTime,
           };
         }
 
         return {
           status: TimeStatus.In,
-          inTime: time - sectionParams.leftBoundTime,
+          inTime: time - sectionDatas.leftBoundTime,
         };
       }
       case TimeDirection.Left: {
-        if (time > sectionParams.rightBoundTime) {
+        if (time > sectionDatas.rightBoundTime) {
           return {
             status: TimeStatus.Before,
             inTime: null,
           };
         }
 
-        if (time < sectionParams.leftBoundTime) {
+        if (time < sectionDatas.leftBoundTime) {
           return {
             status: TimeStatus.After,
-            inTime: sectionParams.rightBoundTime - sectionParams.leftBoundTime,
+            inTime: sectionDatas.rightBoundTime - sectionDatas.leftBoundTime,
           };
         }
 
-        if (time === sectionParams.leftBoundTime) {
+        if (time === sectionDatas.leftBoundTime) {
           return {
             status: TimeStatus.In,
-            inTime: sectionParams.leftBoundTime,
+            inTime: sectionDatas.leftBoundTime,
           };
         }
 
-        if (time === sectionParams.rightBoundTime) {
+        if (time === sectionDatas.rightBoundTime) {
           return {
             status: TimeStatus.In,
             inTime: 0,
@@ -126,7 +126,7 @@ namespace TimeState {
 
         return {
           status: TimeStatus.In,
-          inTime: sectionParams.rightBoundTime - time,
+          inTime: sectionDatas.rightBoundTime - time,
         };
       }
       default: {
@@ -144,23 +144,22 @@ export { TimeState };
 
 /**
  * Params for a section in a timeline.
- * Has a start run time, and an end
  */
-interface SectionParams {
+interface SectionData {
   /**
-   * Time (of the timeline) of the left bound.
+   * Time (in the timeline) of the left bound.
    */
   readonly leftBoundTime: number;
 
   /**
-   * Time (of the timeline) of the right bound.
+   * Time (in the timeline) of the right bound.
    */
   readonly rightBoundTime: number;
 }
 
-namespace SectionParams {
+namespace SectionData {
   export function validate(
-    self: SectionParams,
+    self: SectionData,
     sectionName?: string
   ): Error | undefined {
     if (
@@ -208,7 +207,7 @@ namespace SectionParams {
   }
 }
 
-export { SectionParams };
+export { SectionData };
 
 // @region-end
 
@@ -226,13 +225,13 @@ namespace SectionState {
    * Create state of a section in a timeline.
    */
   export function create(
-    sectionParams: SectionParams,
+    sectionDatas: SectionData,
     timelineTime: number,
     timelineTimeDirection: TimeDirection
   ): SectionState {
     return {
       timeState: TimeState.create(
-        sectionParams,
+        sectionDatas,
         timelineTime,
         timelineTimeDirection
       ),
@@ -262,11 +261,11 @@ namespace TimelineState {
    * Create state of a timeline.
    */
   export function create(
-    sectionParams: Array<SectionParams>,
+    sectionDatas: Array<SectionData>,
     timelineTime: number,
     timelineTimeDirection: TimeDirection
   ): TimelineState {
-    const sectionStates = sectionParams.map((i) =>
+    const sectionStates = sectionDatas.map((i) =>
       SectionState.create(i, timelineTime, timelineTimeDirection)
     );
 

@@ -1,13 +1,13 @@
 import { expect, it, describe } from "bun:test";
 //
-import { SectionParams } from "../source/code/index.ts";
+import { SectionData } from "../source/code/index.ts";
 
-describe(SectionParams.validate.name, () => {
+describe(SectionData.validate.name, () => {
   // TODO happy
 
   it("throws when startTime is NaN ", () => {
     expect(() =>
-      SectionParams.validate({
+      SectionData.validate({
         leftBoundTime: Number.NaN,
         rightBoundTime: 0,
       })
@@ -16,7 +16,7 @@ describe(SectionParams.validate.name, () => {
 
   it("throws when endTime is NaN ", () => {
     expect(() =>
-      SectionParams.validate({
+      SectionData.validate({
         leftBoundTime: 0,
         rightBoundTime: Number.NaN,
       })
@@ -25,7 +25,7 @@ describe(SectionParams.validate.name, () => {
 
   it("throws when startTime is Number.POSITIVE_INFINITY ", () => {
     expect(() =>
-      SectionParams.validate({
+      SectionData.validate({
         leftBoundTime: Number.POSITIVE_INFINITY,
         rightBoundTime: 0,
       })
@@ -34,7 +34,7 @@ describe(SectionParams.validate.name, () => {
 
   it("throws when startTime is Number.NEGATIVE_INFINITY ", () => {
     expect(() =>
-      SectionParams.validate({
+      SectionData.validate({
         leftBoundTime: Number.NEGATIVE_INFINITY,
         rightBoundTime: 0,
       })
@@ -43,7 +43,7 @@ describe(SectionParams.validate.name, () => {
 
   it("throws when endTime is Number.POSITIVE_INFINITY ", () => {
     expect(() =>
-      SectionParams.validate({
+      SectionData.validate({
         leftBoundTime: 0,
         rightBoundTime: Number.POSITIVE_INFINITY,
       })
@@ -52,7 +52,7 @@ describe(SectionParams.validate.name, () => {
 
   it("throws when endTime is Number.NEGATIVE_INFINITY ", () => {
     expect(() =>
-      SectionParams.validate({
+      SectionData.validate({
         leftBoundTime: 0,
         rightBoundTime: Number.NEGATIVE_INFINITY,
       })
@@ -61,7 +61,7 @@ describe(SectionParams.validate.name, () => {
 
   it("throws when endTime < 0 ", () => {
     expect(() =>
-      SectionParams.validate({
+      SectionData.validate({
         leftBoundTime: 0,
         rightBoundTime: -1,
       })
@@ -70,7 +70,7 @@ describe(SectionParams.validate.name, () => {
 
   it("throws when startTime < 0 ", () => {
     expect(() =>
-      SectionParams.validate({
+      SectionData.validate({
         leftBoundTime: -1,
         rightBoundTime: 0,
       })
@@ -79,7 +79,7 @@ describe(SectionParams.validate.name, () => {
 
   it("throws when startTime > endTime ", () => {
     expect(() =>
-      SectionParams.validate({
+      SectionData.validate({
         leftBoundTime: 1,
         rightBoundTime: 0,
       })

@@ -9,7 +9,7 @@ import {
 //
 import type { EntityCollection } from "@negabyte-studios/lib-entity";
 import {
-  SectionParams,
+  SectionData,
   TimeDirection,
   TimelineState,
   TimeStatus,
@@ -129,15 +129,15 @@ const RevealTextExampleRoute: Component = () => {
 
     const nextDialogBoxDesiredText = `Now this is a story all about how`;
 
-    const timelineSectionParams = [
+    const timelineSectionDatas = [
       {
         leftBoundTime: 60, // wait 60 frames
         rightBoundTime: 60 + nextDialogBoxDesiredText.length, // 1 character per frame
       },
-    ] satisfies ReadonlyArray<SectionParams>;
+    ] satisfies ReadonlyArray<SectionData>;
 
     const firstTimelineState = TimelineState.create(
-      timelineSectionParams,
+      timelineSectionDatas,
       0,
       TimeDirection.Right
     );
@@ -163,7 +163,7 @@ const RevealTextExampleRoute: Component = () => {
 
     function handleAnimationFrame() {
       const nextTimelineState = TimelineState.create(
-        timelineSectionParams,
+        timelineSectionDatas,
         graphicsWorld.store.timelineState.timeState.inTime + 1,
         TimeDirection.Right
       );

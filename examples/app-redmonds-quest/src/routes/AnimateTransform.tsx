@@ -10,7 +10,7 @@ import {
 import { Point2dFloat64, Float64 } from "@negabyte-studios/lib-math";
 import type { EntityCollection, EntityId } from "@negabyte-studios/lib-entity";
 import {
-  SectionParams,
+  SectionData,
   TimeDirection,
   TimelineState,
   TimeStatus,
@@ -137,7 +137,7 @@ const AnimateTransformExampleRoute: Component = () => {
       canvasRenderingContext: canvasRenderingContext,
     };
 
-    const timelineSectionParams = [
+    const timelineSectionDatas = [
       {
         leftBoundTime: 1000,
         rightBoundTime: 2000,
@@ -150,10 +150,10 @@ const AnimateTransformExampleRoute: Component = () => {
         leftBoundTime: 3000,
         rightBoundTime: 3500,
       },
-    ] satisfies ReadonlyArray<SectionParams>;
+    ] satisfies ReadonlyArray<SectionData>;
 
     const firstTimelineState = TimelineState.create(
-      timelineSectionParams,
+      timelineSectionDatas,
       0,
       TimeDirection.Right
     );
@@ -212,7 +212,7 @@ const AnimateTransformExampleRoute: Component = () => {
 
     function handleAnimationFrame() {
       const nextTimelineState = TimelineState.create(
-        timelineSectionParams,
+        timelineSectionDatas,
         graphicsWorld.store.timelineState.timeState.inTime + 1000 / 60,
         TimeDirection.Right
       );
@@ -222,28 +222,33 @@ const AnimateTransformExampleRoute: Component = () => {
         const iTaskEntityState =
           graphicsWorld.store.entitiesState.tasks.states[iTaskEntityId];
 
-        const iTaskTargetTimelineSectionState =
-          graphicsWorld.store.timelineState.sectionStates[
-            iTaskEntityState.targetTimelineSectionIndex
-          ];
-
         switch (iTaskEntityState.taskType) {
           case GraphicsTaskTypeEnum.AnimateCharacterPositionUsingTimeline: {
-            const iTaskTargetSectionParams =
-              timelineSectionParams[
+            const iTaskTargetTimelineSectionDatas =
+              timelineSectionDatas[iTaskEntityState.targetTimelineSectionIndex];
+
+            const iNextTaskTargetTimelineSectionState =
+              graphicsWorld.store.timelineState.sectionStates[
                 iTaskEntityState.targetTimelineSectionIndex
               ];
 
-            const taskTimelineSectionProgress = Float64.getProgress(
-              iTaskTargetTimelineSectionState.timeState.inTime,
-              iTaskTargetSectionParams.leftBoundTime,
-              iTaskTargetSectionParams.rightBoundTime
+            if (
+              iNextTaskTargetTimelineSectionState.timeState.status ===
+              TimeStatus.Before
+            ) {
+              continue;
+            }
+
+            const iNextTaskTimelineSectionProgress = Float64.getProgress(
+              nextTimelineState.timeState.inTime,
+              iTaskTargetTimelineSectionDatas.leftBoundTime,
+              iTaskTargetTimelineSectionDatas.rightBoundTime
             );
 
-            const nextPosition = Point2dFloat64.interpolatePosition(
+            const iNextTaskPosition = Point2dFloat64.interpolatePosition(
               iTaskEntityState.positionStart,
               iTaskEntityState.positionEnd,
-              taskTimelineSectionProgress
+              iNextTaskTimelineSectionProgress
             );
 
             graphicsWorld.store.setEntitiesState(
@@ -251,7 +256,7 @@ const AnimateTransformExampleRoute: Component = () => {
                 (state) =>
                   (state.characters.states[
                     iTaskEntityState.targetCharacterEntityId
-                  ].position = nextPosition)
+                  ].position = iNextTaskPosition)
               )
             );
 

@@ -2,15 +2,14 @@ type Float64 = number;
 
 namespace Float64 {
   /**
-   * aka interpolant
-   * @see
+   * Get the normalized progress (interpolant) between two bounds.
    */
   export function getProgress(
     value: Float64,
-    min: Float64,
-    max: Float64
+    minBound: Float64,
+    maxBound: Float64
   ): Float64 {
-    return value / (max - min);
+    return (value - minBound) / (maxBound - minBound);
   }
   export function interpolate(start: Float64, end: Float64, t: Float64) {
     t = Math.max(0, Math.min(1, t));
@@ -23,14 +22,17 @@ export { Float64 };
 type Point2dFloat64 = [Float64, Float64];
 
 namespace Point2dFloat64 {
+  /**
+   * Interpolate between start and end position.
+   */
   export function interpolatePosition(
-    start: Point2dFloat64,
-    end: Point2dFloat64,
-    t: Float64
+    startPosition: Point2dFloat64,
+    endPosition: Point2dFloat64,
+    interpolant: Float64
   ): Point2dFloat64 {
     return [
-      Float64.interpolate(start[0], end[0], t),
-      Float64.interpolate(start[1], end[1], t),
+      Float64.interpolate(startPosition[0], endPosition[0], interpolant),
+      Float64.interpolate(startPosition[1], endPosition[1], interpolant),
     ];
   }
 }

@@ -1,3 +1,17 @@
+# STORY more time properties in time state
+
+## TODO
+
+- leftTime: time measured from the left bound, in direction of time
+- rightTime: time measured from the right bound, in direction of time
+- outTime: time towards the end bound. "remaining time"
+
+---
+
+# STORY refactor use objects not arrays
+
+---
+
 # STORY TimelineState tests
 
 ---
@@ -23,13 +37,3 @@ As a user, I want a TimelineState.update function, so that I can efficiently upd
 ## DESIGN
 
 As a user, I want a TimelineState.updateStore function, so that I can efficiently update a Store<TimelineState> using a set store function
-
----
-
-# STORY more time properties in time state
-
-## TODO
-
-- leftTime: time from the left side
-- rightTime: time from the right side
-- outTime: "remaining" time
