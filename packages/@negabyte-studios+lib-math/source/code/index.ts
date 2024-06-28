@@ -6,9 +6,9 @@ namespace Float64 {
    * @see
    */
   export function getProgress(
+    value: Float64,
     min: Float64,
-    max: Float64,
-    value: Float64
+    max: Float64
   ): Float64 {
     return value / (max - min);
   }

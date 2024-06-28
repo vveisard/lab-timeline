@@ -3,18 +3,16 @@ import {
   DeepMutable,
   createStore,
   produce,
-  unwrap,
   type SetStoreFunction,
   type Store,
 } from "solid-js/store";
 //
-import { Point2dFloat64, Float64 } from "@negabyte-studios/lib-math";
-import type { EntityCollection, EntityId } from "@negabyte-studios/lib-entity";
+import type { EntityCollection } from "@negabyte-studios/lib-entity";
 import {
+  SectionParams,
+  TimeDirection,
   TimelineState,
-  TimelineParams,
   TimeStatus,
-  SectionParamsRunType,
 } from "@negabyte-studios/lib-timeline";
 
 interface DialogBoxEntityState {
@@ -27,16 +25,15 @@ interface GraphicsWorldEntitiesState {
 }
 
 enum GraphicsTaskTypeEnum {
-  RevealText,
+  RevealTextUsingTimeline,
 }
 
 interface BaseGraphicsTaskState {
   readonly taskType: GraphicsTaskTypeEnum;
 }
 
-interface RevealTextUsingTimelineSectionTaskState
-  extends BaseGraphicsTaskState {
-  readonly taskType: GraphicsTaskTypeEnum.RevealText;
+interface RevealTextUsingTimelineTaskState extends BaseGraphicsTaskState {
+  readonly taskType: GraphicsTaskTypeEnum.RevealTextUsingTimeline;
   /**
    * Index of the target timeline section to use.
    */
@@ -45,7 +42,7 @@ interface RevealTextUsingTimelineSectionTaskState
   readonly desiredText: string;
 }
 
-type GraphicsTaskEntityState = RevealTextUsingTimelineSectionTaskState;
+type GraphicsTaskEntityState = RevealTextUsingTimelineTaskState;
 
 interface GraphicsWorldStore {
   readonly entitiesState: Store<GraphicsWorldEntitiesState>;
@@ -112,7 +109,7 @@ namespace GraphicsWorld {
   }
 }
 
-const BasicRunCountRoute: Component = () => {
+const RevealTextExampleRoute: Component = () => {
   const [getCanvasElement, setCanvasElement] =
     createSignal<HTMLCanvasElement>();
 
@@ -132,13 +129,18 @@ const BasicRunCountRoute: Component = () => {
 
     const nextDialogBoxDesiredText = `Now this is a story all about how`;
 
-    const timelineParams = TimelineParams.create([
+    const timelineSectionParams = [
       {
-        sectionRunType: SectionParamsRunType.RunCount,
-        startTime: 60,
-        endTime: 60 + nextDialogBoxDesiredText.length,
+        leftBoundTime: 60, // wait 60 frames
+        rightBoundTime: 60 + nextDialogBoxDesiredText.length, // 1 character per frame
       },
-    ]);
+    ] satisfies ReadonlyArray<SectionParams>;
+
+    const firstTimelineState = TimelineState.create(
+      timelineSectionParams,
+      0,
+      TimeDirection.Right
+    );
 
     const graphicsWorld = GraphicsWorld.create(graphicsWorldResources, {
       entitiesState: {
@@ -149,21 +151,21 @@ const BasicRunCountRoute: Component = () => {
           ids: ["reveal-dialog-box-text"],
           states: {
             "reveal-dialog-box-text": {
-              taskType: GraphicsTaskTypeEnum.RevealText,
+              taskType: GraphicsTaskTypeEnum.RevealTextUsingTimeline,
               targetTimelineSectionIndex: 0,
               desiredText: nextDialogBoxDesiredText,
             },
           },
         },
       },
-      timelineState: TimelineState.create(timelineParams.sectionParams.length),
+      timelineState: firstTimelineState,
     });
 
     function handleAnimationFrame() {
-      const nextTimelineState = TimelineState.update(
-        unwrap(graphicsWorld.store.timelineState),
-        timelineParams,
-        1000 / 60
+      const nextTimelineState = TimelineState.create(
+        timelineSectionParams,
+        graphicsWorld.store.timelineState.timeState.inTime + 1,
+        TimeDirection.Right
       );
 
       graphicsWorld.store.setTimelineState(nextTimelineState);
@@ -178,15 +180,11 @@ const BasicRunCountRoute: Component = () => {
             iTaskEntityState.targetTimelineSectionIndex
           ];
 
-        if (iTaskTargetTimelineSectionState.timeStatus === TimeStatus.None) {
-          continue;
-        }
-
         switch (iTaskEntityState.taskType) {
-          case GraphicsTaskTypeEnum.RevealText: {
+          case GraphicsTaskTypeEnum.RevealTextUsingTimeline: {
             const nextText = iTaskEntityState.desiredText.slice(
               0,
-              iTaskTargetTimelineSectionState.timeState.runCount
+              iTaskTargetTimelineSectionState.timeState.inTime
             );
 
             graphicsWorld.store.setEntitiesState(
@@ -205,6 +203,11 @@ const BasicRunCountRoute: Component = () => {
 
       GraphicsWorld.clearCanvas(graphicsWorld);
       GraphicsWorld.renderCanvas(graphicsWorld);
+
+      // timeline is over, do not update any more
+      if (nextTimelineState.timeState.status === TimeStatus.After) {
+        return;
+      }
 
       requestAnimationFrame(handleAnimationFrame);
     }
@@ -225,4 +228,4 @@ const BasicRunCountRoute: Component = () => {
   );
 };
 
-export { BasicRunCountRoute };
+export { RevealTextExampleRoute };

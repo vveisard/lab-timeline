@@ -18,29 +18,28 @@ It's up to you to decide what do with the time!
 
 Timeline contains timeline sections. From here on, we'll refer to "timeline sections" as "sections".
 
-Timeline and sections have _time state_.
+Sections have a _left bound_ and a _right bound_.
 
-The state of a timeline and its sections are updated using an `update` function. As a developer, you will invoke `update` using a schedule.
+"time" is unitless parameter.
+
+Time has a direction.
+
+you can determine the _time in_ the section given a timeline time, time direction, section left bound, and section right bound.
 
 Both timelines and their section have _status_:
 
-- None
-- Running
-- Completed
-
-"run time" which is the amount of time the object has been "running" and _run count_ which is the amount of times the object has been updated while its status is "run".
-
-A section has params which describe when the section "starts" and "ends".
-
-From the time state, the start time and end time params, you can determine _progress_ for the section.
-
-Developers can use the progress of a section to drive animation.
+- Before
+- In
+- After
 
 # Usage
 
-"time" is unitless.
+Developers can use the _time in_ a section to drive animation.
 
-This library is state-driven; there are no events. We encourage you to use a reactive state library and "subscribe" to state changes using effects. Personally we reccomend [solid-js](https://www.solidjs.com/).
+There are generally two ways to use this library:
+
+- you can use timeline state direclty in your render layer in an update (animation frame)
+- you can write the next timeline state to a store, and update objects in your render layer in effects
 
 # Cookbook
 

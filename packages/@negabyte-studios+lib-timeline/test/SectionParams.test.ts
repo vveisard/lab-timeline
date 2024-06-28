@@ -1,87 +1,87 @@
 import { expect, it, describe } from "bun:test";
 //
-import { AnySectionParams } from "../source/code/index.ts";
+import { SectionParams } from "../source/code/index.ts";
 
-describe(AnySectionParams.validate.name, () => {
+describe(SectionParams.validate.name, () => {
   // TODO happy
 
   it("throws when startTime is NaN ", () => {
     expect(() =>
-      AnySectionParams.validate({
-        startRunTime: Number.NaN,
-        endRunTime: 0,
+      SectionParams.validate({
+        leftBoundTime: Number.NaN,
+        rightBoundTime: 0,
       })
     ).toThrow();
   });
 
   it("throws when endTime is NaN ", () => {
     expect(() =>
-      AnySectionParams.validate({
-        startRunTime: 0,
-        endRunTime: Number.NaN,
+      SectionParams.validate({
+        leftBoundTime: 0,
+        rightBoundTime: Number.NaN,
       })
     ).toBeDefined();
   });
 
   it("throws when startTime is Number.POSITIVE_INFINITY ", () => {
     expect(() =>
-      AnySectionParams.validate({
-        startRunTime: Number.POSITIVE_INFINITY,
-        endRunTime: 0,
+      SectionParams.validate({
+        leftBoundTime: Number.POSITIVE_INFINITY,
+        rightBoundTime: 0,
       })
     ).toBeDefined();
   });
 
   it("throws when startTime is Number.NEGATIVE_INFINITY ", () => {
     expect(() =>
-      AnySectionParams.validate({
-        startRunTime: Number.NEGATIVE_INFINITY,
-        endRunTime: 0,
+      SectionParams.validate({
+        leftBoundTime: Number.NEGATIVE_INFINITY,
+        rightBoundTime: 0,
       })
     ).toBeDefined();
   });
 
   it("throws when endTime is Number.POSITIVE_INFINITY ", () => {
     expect(() =>
-      AnySectionParams.validate({
-        startRunTime: 0,
-        endRunTime: Number.POSITIVE_INFINITY,
+      SectionParams.validate({
+        leftBoundTime: 0,
+        rightBoundTime: Number.POSITIVE_INFINITY,
       })
     ).toBeDefined();
   });
 
   it("throws when endTime is Number.NEGATIVE_INFINITY ", () => {
     expect(() =>
-      AnySectionParams.validate({
-        startRunTime: 0,
-        endRunTime: Number.NEGATIVE_INFINITY,
+      SectionParams.validate({
+        leftBoundTime: 0,
+        rightBoundTime: Number.NEGATIVE_INFINITY,
       })
     ).toBeDefined();
   });
 
   it("throws when endTime < 0 ", () => {
     expect(() =>
-      AnySectionParams.validate({
-        startRunTime: 0,
-        endRunTime: -1,
+      SectionParams.validate({
+        leftBoundTime: 0,
+        rightBoundTime: -1,
       })
     ).toBeDefined();
   });
 
   it("throws when startTime < 0 ", () => {
     expect(() =>
-      AnySectionParams.validate({
-        startRunTime: -1,
-        endRunTime: 0,
+      SectionParams.validate({
+        leftBoundTime: -1,
+        rightBoundTime: 0,
       })
     ).toBeDefined();
   });
 
   it("throws when startTime > endTime ", () => {
     expect(() =>
-      AnySectionParams.validate({
-        startRunTime: 1,
-        endRunTime: 0,
+      SectionParams.validate({
+        leftBoundTime: 1,
+        rightBoundTime: 0,
       })
     ).toBeDefined();
   });

@@ -3,7 +3,6 @@ import {
   DeepMutable,
   createStore,
   produce,
-  unwrap,
   type SetStoreFunction,
   type Store,
 } from "solid-js/store";
@@ -11,10 +10,10 @@ import {
 import { Point2dFloat64, Float64 } from "@negabyte-studios/lib-math";
 import type { EntityCollection, EntityId } from "@negabyte-studios/lib-entity";
 import {
+  SectionParams,
+  TimeDirection,
   TimelineState,
-  TimelineParams,
   TimeStatus,
-  SectionParamsRunType,
 } from "@negabyte-studios/lib-timeline";
 
 /**
@@ -31,16 +30,16 @@ interface GraphicsWorldEntitiesState {
 }
 
 enum GraphicsTaskTypeEnum {
-  AnimateCharacterPositionTimelineSection,
+  AnimateCharacterPositionUsingTimeline,
 }
 
 interface BaseGraphicsTaskState {
   readonly taskType: GraphicsTaskTypeEnum;
 }
 
-interface AnimateCharacterPositionUsingTimelineSectionTaskState
+interface AnimateCharacterPositionUsingTimelineTaskState
   extends BaseGraphicsTaskState {
-  readonly taskType: GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineSection;
+  readonly taskType: GraphicsTaskTypeEnum.AnimateCharacterPositionUsingTimeline;
   /**
    * Index of the target timeline section to use.
    */
@@ -50,8 +49,7 @@ interface AnimateCharacterPositionUsingTimelineSectionTaskState
   readonly positionEnd: Point2dFloat64;
 }
 
-type GraphicsTaskEntityState =
-  AnimateCharacterPositionUsingTimelineSectionTaskState;
+type GraphicsTaskEntityState = AnimateCharacterPositionUsingTimelineTaskState;
 
 interface GraphicsWorldStore {
   readonly entitiesState: Store<GraphicsWorldEntitiesState>;
@@ -122,7 +120,7 @@ namespace GraphicsWorld {
   }
 }
 
-const AdvancedRunTimeRoute: Component = () => {
+const AnimateTransformExampleRoute: Component = () => {
   const [getCanvasElement, setCanvasElement] =
     createSignal<HTMLCanvasElement>();
 
@@ -139,23 +137,26 @@ const AdvancedRunTimeRoute: Component = () => {
       canvasRenderingContext: canvasRenderingContext,
     };
 
-    const timelineParams = TimelineParams.create([
+    const timelineSectionParams = [
       {
-        sectionRunType: SectionParamsRunType.RunTime,
-        startTime: 1000,
-        endTime: 2000,
+        leftBoundTime: 1000,
+        rightBoundTime: 2000,
       },
       {
-        sectionRunType: SectionParamsRunType.RunTime,
-        startTime: 1250,
-        endTime: 2250,
+        leftBoundTime: 1250,
+        rightBoundTime: 2250,
       },
       {
-        sectionRunType: SectionParamsRunType.RunTime,
-        startTime: 3000,
-        endTime: 3500,
+        leftBoundTime: 3000,
+        rightBoundTime: 3500,
       },
-    ]);
+    ] satisfies ReadonlyArray<SectionParams>;
+
+    const firstTimelineState = TimelineState.create(
+      timelineSectionParams,
+      0,
+      TimeDirection.Right
+    );
 
     const graphicsWorld = GraphicsWorld.create(graphicsWorldResources, {
       entitiesState: {
@@ -181,7 +182,7 @@ const AdvancedRunTimeRoute: Component = () => {
           states: {
             "animate-character-position-bluford-a": {
               taskType:
-                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineSection,
+                GraphicsTaskTypeEnum.AnimateCharacterPositionUsingTimeline,
               targetCharacterEntityId: "bluford",
               positionStart: [0, 0],
               positionEnd: [100, 100],
@@ -189,7 +190,7 @@ const AdvancedRunTimeRoute: Component = () => {
             },
             "animate-character-position-redmond-a": {
               taskType:
-                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineSection,
+                GraphicsTaskTypeEnum.AnimateCharacterPositionUsingTimeline,
               targetCharacterEntityId: "redmond",
               positionStart: [0, 0],
               positionEnd: [100, 0],
@@ -197,7 +198,7 @@ const AdvancedRunTimeRoute: Component = () => {
             },
             "animate-character-position-redmond-b": {
               taskType:
-                GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineSection,
+                GraphicsTaskTypeEnum.AnimateCharacterPositionUsingTimeline,
               targetCharacterEntityId: "redmond",
               positionStart: [100, 0],
               positionEnd: [100, 100],
@@ -206,19 +207,17 @@ const AdvancedRunTimeRoute: Component = () => {
           },
         },
       },
-      timelineState: TimelineState.create(timelineParams.sectionParams.length),
+      timelineState: firstTimelineState,
     });
 
     function handleAnimationFrame() {
-      const nextTimelineState = TimelineState.update(
-        unwrap(graphicsWorld.store.timelineState),
-        timelineParams,
-        1000 / 60
+      const nextTimelineState = TimelineState.create(
+        timelineSectionParams,
+        graphicsWorld.store.timelineState.timeState.inTime + 1000 / 60,
+        TimeDirection.Right
       );
 
-      graphicsWorld.store.setTimelineState(nextTimelineState);
-
-      // set character entity state using timeline and tasks
+      // render using next timeline state
       for (const iTaskEntityId of graphicsWorld.store.entitiesState.tasks.ids) {
         const iTaskEntityState =
           graphicsWorld.store.entitiesState.tasks.states[iTaskEntityId];
@@ -228,21 +227,17 @@ const AdvancedRunTimeRoute: Component = () => {
             iTaskEntityState.targetTimelineSectionIndex
           ];
 
-        if (iTaskTargetTimelineSectionState.timeStatus === TimeStatus.None) {
-          continue;
-        }
-
         switch (iTaskEntityState.taskType) {
-          case GraphicsTaskTypeEnum.AnimateCharacterPositionTimelineSection: {
+          case GraphicsTaskTypeEnum.AnimateCharacterPositionUsingTimeline: {
             const iTaskTargetSectionParams =
-              timelineParams.sectionParams[
+              timelineSectionParams[
                 iTaskEntityState.targetTimelineSectionIndex
               ];
 
             const taskTimelineSectionProgress = Float64.getProgress(
-              iTaskTargetSectionParams.startTime,
-              iTaskTargetSectionParams.endTime,
-              iTaskTargetTimelineSectionState.timeState.runTime
+              iTaskTargetTimelineSectionState.timeState.inTime,
+              iTaskTargetSectionParams.leftBoundTime,
+              iTaskTargetSectionParams.rightBoundTime
             );
 
             const nextPosition = Point2dFloat64.interpolatePosition(
@@ -268,10 +263,19 @@ const AdvancedRunTimeRoute: Component = () => {
         }
       }
 
+      graphicsWorld.store.setTimelineState(nextTimelineState);
+
       GraphicsWorld.clearCanvas(graphicsWorld);
       GraphicsWorld.renderCanvas(graphicsWorld);
 
+      // timeline is over, do not update any more
+      if (nextTimelineState.timeState.status === TimeStatus.After) {
+        return;
+      }
+
       requestAnimationFrame(handleAnimationFrame);
+
+      return;
     }
     requestAnimationFrame(handleAnimationFrame);
   });
@@ -290,4 +294,4 @@ const AdvancedRunTimeRoute: Component = () => {
   );
 };
 
-export { AdvancedRunTimeRoute };
+export { AnimateTransformExampleRoute };
