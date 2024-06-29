@@ -20,6 +20,8 @@ describe(SectionTimeState.create.name, () => {
       TimeDirection.Right
     );
 
+    expect(sectionTimeState.leftTime).toBe(-5);
+    expect(sectionTimeState.rightTime).toBe(15);
     expect(sectionTimeState.inTime).toBe(-5);
     expect(sectionTimeState.status).toBe(TimeStatus.BeforeStart);
   });
@@ -36,6 +38,8 @@ describe(SectionTimeState.create.name, () => {
       TimeDirection.Right
     );
 
+    expect(sectionTimeState.leftTime).toBe(0);
+    expect(sectionTimeState.rightTime).toBe(10);
     expect(sectionTimeState.inTime).toBe(0);
     expect(sectionTimeState.status).toBe(TimeStatus.In);
   });
@@ -52,6 +56,8 @@ describe(SectionTimeState.create.name, () => {
       TimeDirection.Right
     );
 
+    expect(sectionTimeState.leftTime).toBe(2);
+    expect(sectionTimeState.rightTime).toBe(8);
     expect(sectionTimeState.inTime).toBe(2);
     expect(sectionTimeState.status).toBe(TimeStatus.In);
   });
@@ -68,6 +74,8 @@ describe(SectionTimeState.create.name, () => {
       TimeDirection.Right
     );
 
+    expect(sectionTimeState.leftTime).toBe(10);
+    expect(sectionTimeState.rightTime).toBe(0);
     expect(sectionTimeState.inTime).toBe(10);
     expect(sectionTimeState.status).toBe(TimeStatus.In);
   });
@@ -84,7 +92,9 @@ describe(SectionTimeState.create.name, () => {
       TimeDirection.Right
     );
 
-    expect(sectionTimeState.inTime).toBe(10);
+    expect(sectionTimeState.leftTime).toBe(15);
+    expect(sectionTimeState.rightTime).toBe(-5);
+    expect(sectionTimeState.inTime).toBe(15);
     expect(sectionTimeState.status).toBe(TimeStatus.AfterEnd);
   });
 
@@ -100,7 +110,9 @@ describe(SectionTimeState.create.name, () => {
       TimeDirection.Left
     );
 
-    expect(sectionTimeState.inTime).toBe(10);
+    expect(sectionTimeState.leftTime).toBe(-5);
+    expect(sectionTimeState.rightTime).toBe(15);
+    expect(sectionTimeState.inTime).toBe(15);
     expect(sectionTimeState.status).toBe(TimeStatus.AfterEnd);
   });
 
@@ -116,6 +128,8 @@ describe(SectionTimeState.create.name, () => {
       TimeDirection.Left
     );
 
+    expect(sectionTimeState.leftTime).toBe(0);
+    expect(sectionTimeState.rightTime).toBe(10);
     expect(sectionTimeState.inTime).toBe(10);
     expect(sectionTimeState.status).toBe(TimeStatus.In);
   });
@@ -132,6 +146,8 @@ describe(SectionTimeState.create.name, () => {
       TimeDirection.Left
     );
 
+    expect(sectionTimeState.leftTime).toBe(2);
+    expect(sectionTimeState.rightTime).toBe(8);
     expect(sectionTimeState.inTime).toBe(8);
     expect(sectionTimeState.status).toBe(TimeStatus.In);
   });
@@ -148,6 +164,8 @@ describe(SectionTimeState.create.name, () => {
       TimeDirection.Left
     );
 
+    expect(sectionTimeState.leftTime).toBe(10);
+    expect(sectionTimeState.rightTime).toBe(0);
     expect(sectionTimeState.inTime).toBe(0);
     expect(sectionTimeState.status).toBe(TimeStatus.In);
   });
@@ -164,6 +182,8 @@ describe(SectionTimeState.create.name, () => {
       TimeDirection.Left
     );
 
+    expect(sectionTimeState.leftTime).toBe(15);
+    expect(sectionTimeState.rightTime).toBe(-5);
     expect(sectionTimeState.inTime).toBe(-5);
     expect(sectionTimeState.status).toBe(TimeStatus.BeforeStart);
   });

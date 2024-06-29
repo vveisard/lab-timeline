@@ -57,6 +57,19 @@ interface SectionData {
 }
 
 namespace SectionData {
+  export function getLeftTime(
+    self: SectionData,
+    timelineTime: TimeDirection
+  ): number {
+    return timelineTime - self.leftBoundTime;
+  }
+  export function getRightTime(
+    self: SectionData,
+    timelineTime: TimeDirection
+  ): number {
+    return self.rightBoundTime - timelineTime;
+  }
+
   export function validate(
     self: SectionData,
     sectionName?: string
@@ -122,6 +135,18 @@ interface SectionTimeState {
    * negative when time is before this section.
    */
   readonly inTime: number;
+
+  /**
+   * Amount of time into the section, measured from the left bound of this section.
+   * Negative: time is left of the left bound
+   */
+  readonly leftTime: number;
+
+  /**
+   * Amount of time into the section, measured from the right bound of this section.
+   * Negative: time is right of the right bound
+   */
+  readonly rightTime: number;
 }
 
 namespace SectionTimeState {
@@ -130,76 +155,104 @@ namespace SectionTimeState {
    */
   export function create(
     sectionData: SectionData,
-    time: number,
-    timeDirection: number
+    timelineTime: number,
+    timeDirection: TimeDirection
   ): SectionTimeState {
+    const leftTime = SectionData.getLeftTime(sectionData, timelineTime);
+    const rightTime = SectionData.getRightTime(sectionData, timelineTime);
+
     switch (timeDirection) {
       case TimeDirection.Right: {
-        if (time < sectionData.leftBoundTime) {
+        // time is left of left bound
+        if (timelineTime < sectionData.leftBoundTime) {
           return {
             status: TimeStatus.BeforeStart,
-            inTime: time - sectionData.leftBoundTime,
+            leftTime: leftTime,
+            rightTime: rightTime,
+            inTime: leftTime,
           };
         }
 
-        if (time === sectionData.leftBoundTime) {
+        // time is at left bound
+        if (timelineTime === sectionData.leftBoundTime) {
           return {
             status: TimeStatus.In,
-            inTime: 0,
+            inTime: leftTime,
+            leftTime: leftTime,
+            rightTime: rightTime,
           };
         }
 
-        if (time === sectionData.rightBoundTime) {
+        // time is at right bound
+        if (timelineTime === sectionData.rightBoundTime) {
           return {
             status: TimeStatus.In,
-            inTime: sectionData.rightBoundTime - sectionData.leftBoundTime,
+            leftTime: leftTime,
+            rightTime: rightTime,
+            inTime: leftTime,
           };
         }
 
-        if (time > sectionData.rightBoundTime) {
+        // time is right of right bound
+        if (timelineTime > sectionData.rightBoundTime) {
           return {
             status: TimeStatus.AfterEnd,
-            inTime: sectionData.rightBoundTime - sectionData.leftBoundTime,
+            leftTime: leftTime,
+            rightTime: rightTime,
+            inTime: leftTime,
           };
         }
 
+        // time is between bounds
         return {
           status: TimeStatus.In,
-          inTime: time - sectionData.leftBoundTime,
+          leftTime: leftTime,
+          rightTime: rightTime,
+          inTime: leftTime,
         };
       }
       case TimeDirection.Left: {
-        if (time > sectionData.rightBoundTime) {
+        if (timelineTime > sectionData.rightBoundTime) {
           return {
             status: TimeStatus.BeforeStart,
-            inTime: sectionData.rightBoundTime - time,
+            leftTime: leftTime,
+            rightTime: rightTime,
+            inTime: rightTime,
           };
         }
 
-        if (time < sectionData.leftBoundTime) {
+        if (timelineTime < sectionData.leftBoundTime) {
           return {
             status: TimeStatus.AfterEnd,
-            inTime: sectionData.rightBoundTime - sectionData.leftBoundTime,
+            leftTime: leftTime,
+            rightTime: rightTime,
+            inTime: rightTime,
           };
         }
 
-        if (time === sectionData.leftBoundTime) {
+        if (timelineTime === sectionData.leftBoundTime) {
           return {
             status: TimeStatus.In,
-            inTime: sectionData.leftBoundTime,
+            leftTime: leftTime,
+            rightTime: rightTime,
+            inTime: rightTime,
           };
         }
 
-        if (time === sectionData.rightBoundTime) {
+        if (timelineTime === sectionData.rightBoundTime) {
           return {
             status: TimeStatus.In,
-            inTime: 0,
+            leftTime: leftTime,
+            rightTime: rightTime,
+            inTime: rightTime,
           };
         }
 
         return {
           status: TimeStatus.In,
-          inTime: sectionData.rightBoundTime - time,
+          leftTime: leftTime,
+          rightTime: rightTime,
+          inTime: rightTime,
         };
       }
       default: {

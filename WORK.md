@@ -1,16 +1,26 @@
+# STORY
+
+## TODO refactor TimeStatus to Math getRange(value) which returns (-2, -1, 0, 1, 2)
+
+## TODO refactor SectionTimeState.create to use getTimeStatus
+
 ---
-# STORY add more time properties to SectionTimeState
 
-## TODO
+# STORY
 
-- rightTime: time to the right, measured from the left bound. can be negative.
-- leftTime: time to the left, measured from the right bound. can be negative.
-- outTime: time towards the end bound. "remaining time". can be negative.
-## TODO implement getLeftTime and write tests
+## TODO implement getOutTime and update tests
 
-## TODO implement getRightTime and write tests
+## TODO implement get
 
-## TODO implement getOutTime and write tests
+---
+
+# STORY
+
+I want a "TimelineTimeState" struct
+will contain "value" and "direction"
+
+## TODO refactor all functions to take this
+
 ---
 
 # STORY
