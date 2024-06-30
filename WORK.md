@@ -1,19 +1,14 @@
-# STORY delete all useless code and
+# STORY refactor getRelativeIn
 
-I've realized that it's all useless. I can achieve everything explicitly with section data
+## TODO add RangeData.getRelativeIn(value, bound, direction)
 
-## TODO in lib math, delete RangeState
-
-including tests
-
-## TODO in lib timline, delete all code
+## TODO add tests for RangeData.get
 
 ---
 
-# STORY as a user of @vegabyte-studios/math
+# STORY as a user of @vegabyte-studios/base-lib-math
 
-I want to add "bounds behavior" to RangeData which describes how time behaves when out of bounds of section
-This bound behavior
+I want to add "bounds behavior" to RangeData functions which describes how time behaves when out of bounds of range
 
 ## TODO create BoundBehavior enum
 
@@ -22,36 +17,42 @@ This bound behavior
 - Clamp (when overflowing in this direction, inTime is clamped to [0, duration])
 - Wrap (when overflowing in this direction, inTime is wrapped to the range of [0, duration])
 
-## TODO write tests for BoundBehavior in math test
+## TODO write tests for BoundBehavior in math test for Float64
 
 ---
 
-## TODO add bound behavior param for getPositiveTime, and getNegativeTime
+# STORY as a developer, I want to use web-dev-server for examples
 
 ---
 
-# STORY as a developer, I want to use web-dev-server
+# STORY as a package consumer of @vegabyte-studios/base-lib-math, I want looping section usage example
 
 ---
 
-# ACTION add to @yeano monorepo
+# ACTION create and add to new @vegabyte-studios "project" monorepo
 
 ---
 
-# STORY
+# ACTION put the rest of these functions into
 
-## DESIGN
+create the following story in GitLab
 
-As a user, I want a TimelineState.update function, so that I can efficiently update a TimelineState using immutable state update
-
----
-
-# STORY TimelineState.updateStore function
-
-## DESIGN
-
-As a user, I want a TimelineState.updateStore function, so that I can efficiently update a Store<TimelineState> using a set store function
-
----
-
+```markdown
 # STORY consider using records not arrays
+
+---
+
+# STORY RangeData.getRelativeIn
+
+## TODO add RangeData.getRelativeIn(self, value, direction)
+
+## TODO add tests
+
+---
+
+# STORY RangeData.getRelativeOut
+
+## TODO add RangeData.getRelativeOut(self, value, direction)
+
+## TODO add tests for RangeData.get
+```

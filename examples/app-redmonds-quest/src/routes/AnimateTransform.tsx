@@ -14,7 +14,6 @@ import {
   type RangeData,
 } from "@negabyte-studios/lib-math";
 import type { EntityCollection, EntityId } from "@negabyte-studios/lib-entity";
-import { TimelineState } from "@negabyte-studios/lib-timeline";
 
 /**
  * State of a character entity in the graphics world.
@@ -49,13 +48,18 @@ interface AnimateCharacterPositionUsingTimelineTaskState
   readonly positionEnd: Point2dFloat64;
 }
 
+interface GraphicsWorldTimelineState {
+  readonly time: number;
+  readonly sectionRangeDatas: Array<RangeData> | null;
+}
+
 type GraphicsTaskEntityState = AnimateCharacterPositionUsingTimelineTaskState;
 
 interface GraphicsWorldStore {
   readonly entitiesState: Store<GraphicsWorldEntitiesState>;
   readonly setEntitiesState: SetStoreFunction<GraphicsWorldEntitiesState>;
-  readonly timelineState: Store<TimelineState | null>;
-  readonly setTimelineState: SetStoreFunction<TimelineState | null>;
+  readonly timelineState: Store<GraphicsWorldTimelineState | null>;
+  readonly setTimelineState: SetStoreFunction<DeepMutable<GraphicsWorldTimelineState> | null>;
 }
 
 interface GraphicsWorldResources {
@@ -69,7 +73,7 @@ interface GraphicsWorld {
 
 interface GraphicsWorldState {
   readonly entitiesState: GraphicsWorldEntitiesState;
-  readonly timelineState: TimelineState | null;
+  readonly timelineState: GraphicsWorldTimelineState | null;
 }
 
 namespace GraphicsWorld {
@@ -80,17 +84,16 @@ namespace GraphicsWorld {
     const [entitiesStore, setEntitiesStore] =
       createStore<GraphicsWorldEntitiesState>(worldState.entitiesState);
 
-    const [timelineState, setTimelineState] = createStore<TimelineState>(
-      worldState.timelineState
-    );
+    const [timelineStore, setTimelineStore] =
+      createStore<GraphicsWorldTimelineState>(worldState.timelineState);
 
     return {
       resources: worldResources,
       store: {
         entitiesState: entitiesStore,
         setEntitiesState: setEntitiesStore,
-        timelineState: timelineState,
-        setTimelineState: setTimelineState,
+        timelineState: timelineStore,
+        setTimelineState: setTimelineStore,
       },
     };
   }
@@ -152,11 +155,6 @@ const AnimateTransformExampleRoute: Component = () => {
       },
     ] satisfies ReadonlyArray<RangeData>;
 
-    const firstTimelineState = TimelineState.create(
-      timelineSectionRangeDatas,
-      0
-    );
-
     const graphicsWorld = GraphicsWorld.create(graphicsWorldResources, {
       entitiesState: {
         characters: {
@@ -206,61 +204,66 @@ const AnimateTransformExampleRoute: Component = () => {
           },
         },
       },
-      timelineState: firstTimelineState,
+      timelineState: {
+        time: 0,
+        sectionRangeDatas: timelineSectionRangeDatas,
+      },
     });
 
     function handleAnimationFrame() {
-      const nextTimelineState = TimelineState.create(
-        timelineSectionRangeDatas,
-        graphicsWorld.store.timelineState.time + 1000 / 60
-      );
+      const nextTimelineTime =
+        graphicsWorld.store.timelineState.time + 1000 / 60;
 
       // render using next timeline state
       for (const iTaskEntityId of graphicsWorld.store.entitiesState.tasks.ids) {
         const iTaskEntityState =
           graphicsWorld.store.entitiesState.tasks.states[iTaskEntityId];
 
-        const iTaskTargetTimelineSectionState =
-          graphicsWorld.store.timelineState.sectionStates[
+        const iTaskSectionRangeData =
+          graphicsWorld.store.timelineState.sectionRangeDatas[
             iTaskEntityState.targetTimelineSectionIndex
           ];
 
         switch (iTaskEntityState.taskType) {
           case GraphicsTaskTypeEnum.AnimateCharacterPositionUsingTimeline: {
-            const iTaskTargetTimelineSectionRangeDatas =
-              timelineSectionRangeDatas[
-                iTaskEntityState.targetTimelineSectionIndex
-              ];
+            const iTaskTimelineSectionPosition =
+              Float64.getAbsoluteRangePosition(
+                nextTimelineTime,
+                iTaskSectionRangeData.minimumBound,
+                iTaskSectionRangeData.maximumBound
+              );
 
             if (
-              iTaskTargetTimelineSectionState.timeState.position ===
+              iTaskTimelineSectionPosition ===
               AbsoluteAxisRangePosition.LessThanMinimumBound
             ) {
               continue;
             }
 
-            const iNextTaskTimelineSectionProgress = Float64.clamp(
+            const iNextTaskTimelineSectionTimeProgress = Float64.clamp(
+              // TODO replace this with "remap" function
               Float64.getProgress(
-                nextTimelineState.time,
-                iTaskTargetTimelineSectionRangeDatas.minimumBound,
-                iTaskTargetTimelineSectionRangeDatas.maximumBound
+                nextTimelineTime,
+                iTaskSectionRangeData.minimumBound,
+                iTaskSectionRangeData.maximumBound
               ),
               0,
               1.0
             );
 
-            const iNextTaskPosition = Point2dFloat64.interpolatePositionClamped(
-              iTaskEntityState.positionStart,
-              iTaskEntityState.positionEnd,
-              iNextTaskTimelineSectionProgress
-            );
+            const iNextTaskSectionTimePosition =
+              Point2dFloat64.interpolatePositionClamped(
+                iTaskEntityState.positionStart,
+                iTaskEntityState.positionEnd,
+                iNextTaskTimelineSectionTimeProgress
+              );
 
             graphicsWorld.store.setEntitiesState(
               produce<DeepMutable<GraphicsWorldEntitiesState>>(
                 (state) =>
                   (state.characters.states[
                     iTaskEntityState.targetCharacterEntityId
-                  ].position = iNextTaskPosition)
+                  ].position = iNextTaskSectionTimePosition)
               )
             );
 
@@ -272,21 +275,10 @@ const AnimateTransformExampleRoute: Component = () => {
         }
       }
 
-      graphicsWorld.store.setTimelineState(nextTimelineState);
-
       GraphicsWorld.clearCanvas(graphicsWorld);
       GraphicsWorld.renderCanvas(graphicsWorld);
 
-      // timeline is over, do not update any more
-      if (
-        nextTimelineState.sectionStates.every(
-          (i) =>
-            i.timeState.position ===
-            AbsoluteAxisRangePosition.GreaterThanMaximumBound
-        )
-      ) {
-        return;
-      }
+      graphicsWorld.store.setTimelineState("time", nextTimelineTime);
 
       requestAnimationFrame(handleAnimationFrame);
 

@@ -50,11 +50,17 @@ interface RangeData {
 }
 
 namespace RangeData {
-  // TOOD getInTime and getOutTime using AxisDirection
-  export function getPositiveTime(self: RangeData, value: Float64): number {
+  /**
+   * Get the amount a value is in a range, in the positive direction, measured from the minimum bound.
+   */
+  export function getPositiveIn(self: RangeData, value: Float64): number {
     return value - self.minimumBound;
   }
-  export function getNegativeTime(self: RangeData, value: Float64): number {
+
+  /**
+   * Get the amount a value is in a range, in the negative direction, measured from the maximum bound.
+   */
+  export function getNegativeIn(self: RangeData, value: Float64): number {
     return self.maximumBound - value;
   }
 
@@ -139,8 +145,8 @@ namespace RangeState {
     rangeData: RangeData,
     timelineTime: number
   ): RangeState {
-    const positiveTime = RangeData.getPositiveTime(rangeData, timelineTime);
-    const negativeTime = RangeData.getNegativeTime(rangeData, timelineTime);
+    const positiveTime = RangeData.getPositiveIn(rangeData, timelineTime);
+    const negativeTime = RangeData.getNegativeIn(rangeData, timelineTime);
     const position = Float64.getAbsoluteRangePosition(
       timelineTime,
       rangeData.minimumBound,

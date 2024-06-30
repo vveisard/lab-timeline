@@ -8,10 +8,10 @@ import {
 } from "solid-js/store";
 //
 import type { EntityCollection } from "@negabyte-studios/lib-entity";
-import { TimelineState } from "@negabyte-studios/lib-timeline";
 import {
   AbsoluteAxisRangePosition,
-  type RangeData,
+  Float64,
+  RangeData,
 } from "@negabyte-studios/lib-math";
 
 interface DialogBoxEntityState {
@@ -43,11 +43,16 @@ interface RevealTextUsingTimelineTaskState extends BaseGraphicsTaskState {
 
 type GraphicsTaskEntityState = RevealTextUsingTimelineTaskState;
 
+interface GraphicsWorldTimelineState {
+  readonly time: number;
+  readonly sectionRangeDatas: Array<RangeData> | null;
+}
+
 interface GraphicsWorldStore {
   readonly entitiesState: Store<GraphicsWorldEntitiesState>;
   readonly setEntitiesState: SetStoreFunction<GraphicsWorldEntitiesState>;
-  readonly timelineState: Store<TimelineState | null>;
-  readonly setTimelineState: SetStoreFunction<TimelineState | null>;
+  readonly timelineState: Store<GraphicsWorldTimelineState | null>;
+  readonly setTimelineState: SetStoreFunction<DeepMutable<GraphicsWorldTimelineState> | null>;
 }
 
 interface GraphicsWorldResources {
@@ -61,7 +66,7 @@ interface GraphicsWorld {
 
 interface GraphicsWorldState {
   readonly entitiesState: GraphicsWorldEntitiesState;
-  readonly timelineState: TimelineState | null;
+  readonly timelineState: GraphicsWorldTimelineState | null;
 }
 
 namespace GraphicsWorld {
@@ -72,9 +77,8 @@ namespace GraphicsWorld {
     const [entitiesStore, setEntitiesStore] =
       createStore<GraphicsWorldEntitiesState>(worldState.entitiesState);
 
-    const [timelineState, setTimelineState] = createStore<TimelineState>(
-      worldState.timelineState
-    );
+    const [timelineState, setTimelineState] =
+      createStore<GraphicsWorldTimelineState>(worldState.timelineState);
 
     return {
       resources: worldResources,
@@ -135,11 +139,6 @@ const RevealTextExampleRoute: Component = () => {
       },
     ] satisfies ReadonlyArray<RangeData>;
 
-    const firstTimelineState = TimelineState.create(
-      timelineSectionRangeDatas,
-      0
-    );
-
     const graphicsWorld = GraphicsWorld.create(graphicsWorldResources, {
       entitiesState: {
         dialogBox: {
@@ -156,43 +155,53 @@ const RevealTextExampleRoute: Component = () => {
           },
         },
       },
-      timelineState: firstTimelineState,
+      timelineState: {
+        time: 0,
+        sectionRangeDatas: timelineSectionRangeDatas,
+      },
     });
 
     function handleAnimationFrame() {
-      const nextTimelineState = TimelineState.create(
-        timelineSectionRangeDatas,
-        graphicsWorld.store.timelineState.time + 1
-      );
-
-      graphicsWorld.store.setTimelineState(nextTimelineState);
+      const nextTimelineTime = graphicsWorld.store.timelineState.time + 1;
 
       // set character entity state using timeline and tasks
       for (const iTaskEntityId of graphicsWorld.store.entitiesState.tasks.ids) {
         const iTaskEntityState =
           graphicsWorld.store.entitiesState.tasks.states[iTaskEntityId];
 
-        const iTaskTargetTimelineSectionState =
-          graphicsWorld.store.timelineState.sectionStates[
+        const iTaskSectionRangeData =
+          graphicsWorld.store.timelineState.sectionRangeDatas[
             iTaskEntityState.targetTimelineSectionIndex
           ];
 
         switch (iTaskEntityState.taskType) {
           case GraphicsTaskTypeEnum.RevealTextUsingTimeline: {
+            const iTaskTimelineSectionTimePosition =
+              Float64.getAbsoluteRangePosition(
+                nextTimelineTime,
+                iTaskSectionRangeData.minimumBound,
+                iTaskSectionRangeData.maximumBound
+              );
+
             if (
-              iTaskTargetTimelineSectionState.timeState.position ===
+              iTaskTimelineSectionTimePosition ===
               AbsoluteAxisRangePosition.LessThanMinimumBound
             ) {
               continue;
             }
 
-            const nextText = iTaskEntityState.desiredText.slice(
+            const iTaskSectionPositiveTime = RangeData.getPositiveIn(
+              iTaskSectionRangeData,
+              nextTimelineTime
+            );
+
+            const iTaskNextText = iTaskEntityState.desiredText.slice(
               0,
-              iTaskTargetTimelineSectionState.timeState.inPositive
+              iTaskSectionPositiveTime
             );
             graphicsWorld.store.setEntitiesState(
               produce<DeepMutable<GraphicsWorldEntitiesState>>(
-                (state) => (state.dialogBox.text = nextText)
+                (state) => (state.dialogBox.text = iTaskNextText)
               )
             );
 
@@ -207,16 +216,7 @@ const RevealTextExampleRoute: Component = () => {
       GraphicsWorld.clearCanvas(graphicsWorld);
       GraphicsWorld.renderCanvas(graphicsWorld);
 
-      // timeline is over, do not update any more
-      if (
-        nextTimelineState.sectionStates.every(
-          (i) =>
-            i.timeState.position ===
-            AbsoluteAxisRangePosition.GreaterThanMaximumBound
-        )
-      ) {
-        return;
-      }
+      graphicsWorld.store.setTimelineState("time", nextTimelineTime);
 
       requestAnimationFrame(handleAnimationFrame);
     }
