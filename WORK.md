@@ -1,21 +1,18 @@
-# STORY add "position" property to TimeSectionState
+# STORY delete all useless code and
 
-Absolute axis position
+I've realized that it's all useless. I can achieve everything explicitly with section data
 
----
+## TODO in lib math, delete RangeState
 
-# STORY
+including tests
 
-I want a "TimelineTimeState" struct
-will contain "value" and "direction"
-
-## TODO refactor all functions to take this struct
+## TODO in lib timline, delete all code
 
 ---
 
 # STORY as a user of @vegabyte-studios/math
 
-I want to add "bounds behavior" to section data which describes how time behaves when out of bounds of section
+I want to add "bounds behavior" to RangeData which describes how time behaves when out of bounds of section
 This bound behavior
 
 ## TODO create BoundBehavior enum
@@ -29,13 +26,7 @@ This bound behavior
 
 ---
 
-## TODO add bound behavior param for getLeftTime, and getRightTime
-
----
-
-# STORY as a user of @vegabyte-studios/base-lib-time, I want BoundBehaviorMode
-
-## TODO add bound behavior for leftBoundBehavior and rightBoundBehavior for SectionData
+## TODO add bound behavior param for getPositiveTime, and getNegativeTime
 
 ---
 

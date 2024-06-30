@@ -30,6 +30,137 @@ enum AxisDirection {
 
 export { AbsoluteAxisRangePosition, RelativeAxisRangePosition, AxisDirection };
 
+// @region-begin
+
+// @region-start
+
+/**
+ * Data for a range of some number line.
+ */
+interface RangeData {
+  /**
+   * bound of the range the negative direction of an axis.
+   */
+  readonly minimumBound: Float64;
+
+  /**
+   * bound of the range the positive direction of an axis.
+   */
+  readonly maximumBound: Float64;
+}
+
+namespace RangeData {
+  // TOOD getInTime and getOutTime using AxisDirection
+  export function getPositiveTime(self: RangeData, value: Float64): number {
+    return value - self.minimumBound;
+  }
+  export function getNegativeTime(self: RangeData, value: Float64): number {
+    return self.maximumBound - value;
+  }
+
+  export function validate(self: RangeData, name?: string): Error | undefined {
+    if (
+      self.maximumBound !== undefined &&
+      self.maximumBound < self.minimumBound
+    ) {
+      return new Error(
+        `Invalid argument! ${name}: rightBoundTime < leftBoundTime`
+      );
+    }
+
+    if (self.minimumBound < 0) {
+      return new Error(`Invalid argument! ${name}: leftBoundTime < 0`);
+    }
+
+    if (self.maximumBound < 0) {
+      return new Error(`Invalid argument! ${name}: rightBoundTime < 0`);
+    }
+
+    if (Number.isNaN(self.minimumBound)) {
+      return new Error(`Invalid argument! ${name}: leftBoundTime Number.isNaN`);
+    }
+
+    if (Number.isNaN(self.maximumBound)) {
+      return new Error(
+        `Invalid argument! ${name}: rightBoundTime Number.isNaN`
+      );
+    }
+
+    if (!Number.isFinite(self.minimumBound)) {
+      return new Error(
+        `Invalid argument! ${name}: leftBoundTime !Number.isFinite`
+      );
+    }
+
+    if (!Number.isFinite(self.maximumBound)) {
+      return new Error(
+        `Invalid argument! ${name}: rightBoundTime !Number.isFinite`
+      );
+    }
+
+    return undefined;
+  }
+}
+
+export { RangeData };
+
+// @region-end
+
+// @region-start
+
+/**
+ * State of time for a {@link SectionState}.
+ * @remarks
+ * Derived state.
+ */
+interface RangeState {
+  /**
+   * Position of the time relative to this range.
+   */
+  readonly position: AbsoluteAxisRangePosition;
+  /**
+   * Amount of time into the range, measured from the minimum bound of this range.
+   * Negative: time is less than the minimum bound
+   */
+  readonly inPositive: number;
+
+  /**
+   * Amount of time into the range, measured from the maximum bound of this range.
+   * Negative: time is greater than the maximum bound
+   */
+  readonly inNegative: number;
+}
+
+namespace RangeState {
+  /**
+   * Create {@link RangeState} from a {@link SectionRangeData}.
+   */
+  export function create(
+    rangeData: RangeData,
+    timelineTime: number
+  ): RangeState {
+    const positiveTime = RangeData.getPositiveTime(rangeData, timelineTime);
+    const negativeTime = RangeData.getNegativeTime(rangeData, timelineTime);
+    const position = Float64.getAbsoluteRangePosition(
+      timelineTime,
+      rangeData.minimumBound,
+      rangeData.maximumBound
+    );
+
+    return {
+      position: position,
+      inPositive: positiveTime,
+      inNegative: negativeTime,
+    };
+  }
+}
+
+export { RangeState };
+
+// @region-end
+
+// @region-start
+
 type Float64 = number;
 
 namespace Float64 {

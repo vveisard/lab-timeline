@@ -10,11 +10,11 @@ import {
 import {
   Point2dFloat64,
   Float64,
-  AxisDirection,
-  RelativeAxisRangePosition,
+  AbsoluteAxisRangePosition,
+  type RangeData,
 } from "@negabyte-studios/lib-math";
 import type { EntityCollection, EntityId } from "@negabyte-studios/lib-entity";
-import { SectionData, TimelineState } from "@negabyte-studios/lib-timeline";
+import { TimelineState } from "@negabyte-studios/lib-timeline";
 
 /**
  * State of a character entity in the graphics world.
@@ -137,25 +137,24 @@ const AnimateTransformExampleRoute: Component = () => {
       canvasRenderingContext: canvasRenderingContext,
     };
 
-    const timelineSectionDatas = [
+    const timelineSectionRangeDatas = [
       {
-        minimumBoundTime: 1000,
-        maximumBoundTime: 2000,
+        minimumBound: 1000,
+        maximumBound: 2000,
       },
       {
-        minimumBoundTime: 1250,
-        maximumBoundTime: 2250,
+        minimumBound: 1250,
+        maximumBound: 2250,
       },
       {
-        minimumBoundTime: 3000,
-        maximumBoundTime: 3500,
+        minimumBound: 3000,
+        maximumBound: 3500,
       },
-    ] satisfies ReadonlyArray<SectionData>;
+    ] satisfies ReadonlyArray<RangeData>;
 
     const firstTimelineState = TimelineState.create(
-      timelineSectionDatas,
-      0,
-      AxisDirection.Positive
+      timelineSectionRangeDatas,
+      0
     );
 
     const graphicsWorld = GraphicsWorld.create(graphicsWorldResources, {
@@ -212,9 +211,8 @@ const AnimateTransformExampleRoute: Component = () => {
 
     function handleAnimationFrame() {
       const nextTimelineState = TimelineState.create(
-        timelineSectionDatas,
-        graphicsWorld.store.timelineState.time + 1000 / 60,
-        AxisDirection.Positive
+        timelineSectionRangeDatas,
+        graphicsWorld.store.timelineState.time + 1000 / 60
       );
 
       // render using next timeline state
@@ -229,12 +227,14 @@ const AnimateTransformExampleRoute: Component = () => {
 
         switch (iTaskEntityState.taskType) {
           case GraphicsTaskTypeEnum.AnimateCharacterPositionUsingTimeline: {
-            const iTaskTargetTimelineSectionDatas =
-              timelineSectionDatas[iTaskEntityState.targetTimelineSectionIndex];
+            const iTaskTargetTimelineSectionRangeDatas =
+              timelineSectionRangeDatas[
+                iTaskEntityState.targetTimelineSectionIndex
+              ];
 
             if (
-              iTaskTargetTimelineSectionState.timeState.inPosition ===
-              RelativeAxisRangePosition.LessThanStartBound
+              iTaskTargetTimelineSectionState.timeState.position ===
+              AbsoluteAxisRangePosition.LessThanMinimumBound
             ) {
               continue;
             }
@@ -242,8 +242,8 @@ const AnimateTransformExampleRoute: Component = () => {
             const iNextTaskTimelineSectionProgress = Float64.clamp(
               Float64.getProgress(
                 nextTimelineState.time,
-                iTaskTargetTimelineSectionDatas.minimumBoundTime,
-                iTaskTargetTimelineSectionDatas.maximumBoundTime
+                iTaskTargetTimelineSectionRangeDatas.minimumBound,
+                iTaskTargetTimelineSectionRangeDatas.maximumBound
               ),
               0,
               1.0
@@ -281,8 +281,8 @@ const AnimateTransformExampleRoute: Component = () => {
       if (
         nextTimelineState.sectionStates.every(
           (i) =>
-            i.timeState.inPosition ===
-            RelativeAxisRangePosition.GreaterThanEndBound
+            i.timeState.position ===
+            AbsoluteAxisRangePosition.GreaterThanMaximumBound
         )
       ) {
         return;

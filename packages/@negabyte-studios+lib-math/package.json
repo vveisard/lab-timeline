@@ -7,5 +7,12 @@
       "types": "./source/code/index.ts",
       "default": "./source/code/index.ts"
     }
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   }
 }
