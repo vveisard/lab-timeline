@@ -18,13 +18,13 @@ It's up to you to decide what do with the time!
 
 Timeline contains timeline sections. From here on, we'll refer to "timeline sections" as "sections".
 
-Sections have a _left bound_ and a _right bound_.
+Sections have a _minimum bound_ and a _maximum bound_.
 
 "time" is unitless parameter.
 
 Time has a direction.
 
-you can determine the _time in_ the section given a timeline time, time direction, section left bound, and section right bound.
+you can determine the positive time and negative time of the section given a timeline time, time direction, section minimum bound, and section maximum bound.
 
 Both timelines and their section have _status_:
 

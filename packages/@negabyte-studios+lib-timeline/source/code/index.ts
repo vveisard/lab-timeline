@@ -1,41 +1,10 @@
 // @region-start
 
-import { Float64 } from "@negabyte-studios/lib-math";
-
-/**
- * Relative to the time direction.
- */
-enum TimeStatus {
-  /**
-   * Time is at or between bounds.
-   */
-  In,
-  /**
-   * Time is before start bound.
-   * When time direction is right, time is right of the right bound.
-   * When time direction is left, time is left of the left bound.
-   */
-  BeforeStart,
-  /**
-   * time is after end bound.
-   * When time direction is right, time is right of the right bound.
-   * When time direction is left, time is left of the left bound.
-   */
-  AfterEnd,
-}
-
-export { TimeStatus };
-
-// @region-end
-
-// @region-start
-
-enum TimeDirection {
-  Right,
-  Left,
-}
-
-export { TimeDirection };
+import {
+  AxisDirection,
+  Float64,
+  type RelativeAxisRangePosition,
+} from "@negabyte-studios/lib-math";
 
 // @region-end
 
@@ -46,28 +15,28 @@ export { TimeDirection };
  */
 interface SectionData {
   /**
-   * Time (in the timeline) of the left bound.
+   * Time (in the timeline) of the bound in the negative direction of an axis.
    */
-  readonly leftBoundTime: number;
+  readonly minimumBoundTime: number;
 
   /**
-   * Time (in the timeline) of the right bound.
+   * Time (in the timeline) of the bound in the positive direction of an axis.
    */
-  readonly rightBoundTime: number;
+  readonly maximumBoundTime: number;
 }
 
 namespace SectionData {
-  export function getLeftTime(
+  export function getPositiveTime(
     self: SectionData,
-    timelineTime: TimeDirection
+    timelineTime: AxisDirection
   ): number {
-    return timelineTime - self.leftBoundTime;
+    return timelineTime - self.minimumBoundTime;
   }
-  export function getRightTime(
+  export function getNegativeTime(
     self: SectionData,
-    timelineTime: TimeDirection
+    timelineTime: AxisDirection
   ): number {
-    return self.rightBoundTime - timelineTime;
+    return self.maximumBoundTime - timelineTime;
   }
 
   export function validate(
@@ -75,41 +44,41 @@ namespace SectionData {
     sectionName?: string
   ): Error | undefined {
     if (
-      self.rightBoundTime !== undefined &&
-      self.rightBoundTime < self.leftBoundTime
+      self.maximumBoundTime !== undefined &&
+      self.maximumBoundTime < self.minimumBoundTime
     ) {
       return new Error(
         `Invalid argument! ${sectionName}: rightBoundTime < leftBoundTime`
       );
     }
 
-    if (self.leftBoundTime < 0) {
+    if (self.minimumBoundTime < 0) {
       return new Error(`Invalid argument! ${sectionName}: leftBoundTime < 0`);
     }
 
-    if (self.rightBoundTime < 0) {
+    if (self.maximumBoundTime < 0) {
       return new Error(`Invalid argument! ${sectionName}: rightBoundTime < 0`);
     }
 
-    if (Number.isNaN(self.leftBoundTime)) {
+    if (Number.isNaN(self.minimumBoundTime)) {
       return new Error(
         `Invalid argument! ${sectionName}: leftBoundTime Number.isNaN`
       );
     }
 
-    if (Number.isNaN(self.rightBoundTime)) {
+    if (Number.isNaN(self.maximumBoundTime)) {
       return new Error(
         `Invalid argument! ${sectionName}: rightBoundTime Number.isNaN`
       );
     }
 
-    if (!Number.isFinite(self.leftBoundTime)) {
+    if (!Number.isFinite(self.minimumBoundTime)) {
       return new Error(
         `Invalid argument! ${sectionName}: leftBoundTime !Number.isFinite`
       );
     }
 
-    if (!Number.isFinite(self.rightBoundTime)) {
+    if (!Number.isFinite(self.maximumBoundTime)) {
       return new Error(
         `Invalid argument! ${sectionName}: rightBoundTime !Number.isFinite`
       );
@@ -129,7 +98,7 @@ export { SectionData };
  * State of time for a {@link SectionState}.
  */
 interface SectionTimeState {
-  readonly status: TimeStatus;
+  readonly inPosition: RelativeAxisRangePosition;
   /**
    * Amount of time into the section, measured from the "start" bound.
    * negative when time is before this section.
@@ -137,16 +106,16 @@ interface SectionTimeState {
   readonly inTime: number;
 
   /**
-   * Amount of time into the section, measured from the left bound of this section.
-   * Negative: time is left of the left bound
+   * Amount of time into the section, measured from the minimum bound of this section.
+   * Negative: time is less than the minimum bound
    */
-  readonly leftTime: number;
+  readonly positiveTime: number;
 
   /**
-   * Amount of time into the section, measured from the right bound of this section.
-   * Negative: time is right of the right bound
+   * Amount of time into the section, measured from the maximum bound of this section.
+   * Negative: time is greater than the maximum bound
    */
-  readonly rightTime: number;
+  readonly negativeTime: number;
 }
 
 namespace SectionTimeState {
@@ -156,103 +125,34 @@ namespace SectionTimeState {
   export function create(
     sectionData: SectionData,
     timelineTime: number,
-    timeDirection: TimeDirection
+    timelineDirection: AxisDirection
   ): SectionTimeState {
-    const leftTime = SectionData.getLeftTime(sectionData, timelineTime);
-    const rightTime = SectionData.getRightTime(sectionData, timelineTime);
+    const positiveTime = SectionData.getPositiveTime(sectionData, timelineTime);
+    const negativeTime = SectionData.getNegativeTime(sectionData, timelineTime);
+    const inPosition = Float64.getRelativeRangePosition(
+      timelineTime,
+      sectionData.minimumBoundTime,
+      sectionData.maximumBoundTime,
+      timelineDirection
+    );
 
-    switch (timeDirection) {
-      case TimeDirection.Right: {
-        // time is left of left bound
-        if (timelineTime < sectionData.leftBoundTime) {
-          return {
-            status: TimeStatus.BeforeStart,
-            leftTime: leftTime,
-            rightTime: rightTime,
-            inTime: leftTime,
-          };
-        }
-
-        // time is at left bound
-        if (timelineTime === sectionData.leftBoundTime) {
-          return {
-            status: TimeStatus.In,
-            inTime: leftTime,
-            leftTime: leftTime,
-            rightTime: rightTime,
-          };
-        }
-
-        // time is at right bound
-        if (timelineTime === sectionData.rightBoundTime) {
-          return {
-            status: TimeStatus.In,
-            leftTime: leftTime,
-            rightTime: rightTime,
-            inTime: leftTime,
-          };
-        }
-
-        // time is right of right bound
-        if (timelineTime > sectionData.rightBoundTime) {
-          return {
-            status: TimeStatus.AfterEnd,
-            leftTime: leftTime,
-            rightTime: rightTime,
-            inTime: leftTime,
-          };
-        }
-
+    switch (timelineDirection) {
+      case AxisDirection.Positive: {
         // time is between bounds
         return {
-          status: TimeStatus.In,
-          leftTime: leftTime,
-          rightTime: rightTime,
-          inTime: leftTime,
+          inPosition: inPosition,
+          positiveTime: positiveTime,
+          negativeTime: negativeTime,
+          inTime: positiveTime,
         };
       }
-      case TimeDirection.Left: {
-        if (timelineTime > sectionData.rightBoundTime) {
-          return {
-            status: TimeStatus.BeforeStart,
-            leftTime: leftTime,
-            rightTime: rightTime,
-            inTime: rightTime,
-          };
-        }
-
-        if (timelineTime < sectionData.leftBoundTime) {
-          return {
-            status: TimeStatus.AfterEnd,
-            leftTime: leftTime,
-            rightTime: rightTime,
-            inTime: rightTime,
-          };
-        }
-
-        if (timelineTime === sectionData.leftBoundTime) {
-          return {
-            status: TimeStatus.In,
-            leftTime: leftTime,
-            rightTime: rightTime,
-            inTime: rightTime,
-          };
-        }
-
-        if (timelineTime === sectionData.rightBoundTime) {
-          return {
-            status: TimeStatus.In,
-            leftTime: leftTime,
-            rightTime: rightTime,
-            inTime: rightTime,
-          };
-        }
-
+      case AxisDirection.Negative: {
+        // time is between bounds
         return {
-          status: TimeStatus.In,
-          leftTime: leftTime,
-          rightTime: rightTime,
-          inTime: rightTime,
+          inPosition: inPosition,
+          positiveTime: positiveTime,
+          negativeTime: negativeTime,
+          inTime: negativeTime,
         };
       }
       default: {
@@ -276,13 +176,13 @@ namespace SectionState {
   export function create(
     sectionDatas: SectionData,
     timelineTime: number,
-    timelineTimeDirection: TimeDirection
+    timelinetimelineDirection: AxisDirection
   ): SectionState {
     return {
       timeState: SectionTimeState.create(
         sectionDatas,
         timelineTime,
-        timelineTimeDirection
+        timelinetimelineDirection
       ),
     };
   }
@@ -299,7 +199,7 @@ export { SectionState, SectionTimeState };
  */
 interface TimelineState {
   readonly time: number;
-  readonly timeDirection: TimeDirection;
+  readonly timelineDirection: AxisDirection;
   readonly sectionStates: Array<SectionState>;
 }
 
@@ -313,15 +213,15 @@ namespace TimelineState {
   export function create(
     sectionDatas: Array<SectionData>,
     timelineTime: number,
-    timelineTimeDirection: TimeDirection
+    timelinetimelineDirection: AxisDirection
   ): TimelineState {
     const sectionStates = sectionDatas.map((i) =>
-      SectionState.create(i, timelineTime, timelineTimeDirection)
+      SectionState.create(i, timelineTime, timelinetimelineDirection)
     );
 
     return {
       time: timelineTime,
-      timeDirection: timelineTimeDirection,
+      timelineDirection: timelinetimelineDirection,
       sectionStates: sectionStates,
     };
   }

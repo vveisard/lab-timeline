@@ -1,190 +1,211 @@
 import { expect, test, describe } from "bun:test";
 //
 import {
-  SectionData,
-  TimeDirection,
-  SectionTimeState,
-  TimeStatus,
-} from "../source/code/index.ts";
+  AbsoluteAxisRangePosition,
+  AxisDirection,
+  RelativeAxisRangePosition,
+} from "@negabyte-studios/lib-math";
+//
+import { SectionData, SectionTimeState } from "../source/code/index.ts";
 
 describe(SectionTimeState.create.name, () => {
-  test(`when time direction is right and time is left of bounds`, () => {
+  // time direction is positive
+
+  test(`when time direction is positive and time is less than bounds`, () => {
     const sectionDatas: SectionData = {
-      leftBoundTime: 10,
-      rightBoundTime: 20,
+      minimumBoundTime: 10,
+      maximumBoundTime: 20,
     };
 
     const sectionTimeState = SectionTimeState.create(
       sectionDatas,
       5,
-      TimeDirection.Right
+      AxisDirection.Positive
     );
 
-    expect(sectionTimeState.leftTime).toBe(-5);
-    expect(sectionTimeState.rightTime).toBe(15);
+    expect(sectionTimeState.positiveTime).toBe(-5);
+    expect(sectionTimeState.negativeTime).toBe(15);
     expect(sectionTimeState.inTime).toBe(-5);
-    expect(sectionTimeState.status).toBe(TimeStatus.BeforeStart);
+    expect(sectionTimeState.inPosition).toBe(
+      RelativeAxisRangePosition.LessThanStartBound
+    );
   });
 
-  test(`when time direction is right and time is at left bound`, () => {
+  test(`when time direction is positive and time is at minimum bound`, () => {
     const sectionDatas: SectionData = {
-      leftBoundTime: 10,
-      rightBoundTime: 20,
+      minimumBoundTime: 10,
+      maximumBoundTime: 20,
     };
 
     const sectionTimeState = SectionTimeState.create(
       sectionDatas,
       10,
-      TimeDirection.Right
+      AxisDirection.Positive
     );
 
-    expect(sectionTimeState.leftTime).toBe(0);
-    expect(sectionTimeState.rightTime).toBe(10);
+    expect(sectionTimeState.positiveTime).toBe(0);
+    expect(sectionTimeState.negativeTime).toBe(10);
     expect(sectionTimeState.inTime).toBe(0);
-    expect(sectionTimeState.status).toBe(TimeStatus.In);
+    expect(sectionTimeState.inPosition).toBe(
+      RelativeAxisRangePosition.EqualToStartBound
+    );
   });
 
-  test(`when time direction is right and time is between bounds`, () => {
+  test(`when time direction is positive and time is between bounds`, () => {
     const sectionDatas: SectionData = {
-      leftBoundTime: 10,
-      rightBoundTime: 20,
+      minimumBoundTime: 10,
+      maximumBoundTime: 20,
     };
 
     const sectionTimeState = SectionTimeState.create(
       sectionDatas,
       12,
-      TimeDirection.Right
+      AxisDirection.Positive
     );
 
-    expect(sectionTimeState.leftTime).toBe(2);
-    expect(sectionTimeState.rightTime).toBe(8);
+    expect(sectionTimeState.positiveTime).toBe(2);
+    expect(sectionTimeState.negativeTime).toBe(8);
     expect(sectionTimeState.inTime).toBe(2);
-    expect(sectionTimeState.status).toBe(TimeStatus.In);
+    expect(sectionTimeState.inPosition).toBe(RelativeAxisRangePosition.Between);
   });
 
-  test(`when time direction is right and time is at right bound`, () => {
+  test(`when time direction is positive and time is at maximum bound`, () => {
     const sectionDatas: SectionData = {
-      leftBoundTime: 10,
-      rightBoundTime: 20,
+      minimumBoundTime: 10,
+      maximumBoundTime: 20,
     };
 
     const sectionTimeState = SectionTimeState.create(
       sectionDatas,
       20,
-      TimeDirection.Right
+      AxisDirection.Positive
     );
 
-    expect(sectionTimeState.leftTime).toBe(10);
-    expect(sectionTimeState.rightTime).toBe(0);
+    expect(sectionTimeState.positiveTime).toBe(10);
+    expect(sectionTimeState.negativeTime).toBe(0);
     expect(sectionTimeState.inTime).toBe(10);
-    expect(sectionTimeState.status).toBe(TimeStatus.In);
+    expect(sectionTimeState.inPosition).toBe(
+      RelativeAxisRangePosition.EqualToEndBound
+    );
   });
 
-  test(`when time direction is right and time is right of bounds`, () => {
+  test(`when time direction is positive and time is greater than bounds`, () => {
     const sectionDatas: SectionData = {
-      leftBoundTime: 10,
-      rightBoundTime: 20,
+      minimumBoundTime: 10,
+      maximumBoundTime: 20,
     };
 
     const sectionTimeState = SectionTimeState.create(
       sectionDatas,
       25,
-      TimeDirection.Right
+      AxisDirection.Positive
     );
 
-    expect(sectionTimeState.leftTime).toBe(15);
-    expect(sectionTimeState.rightTime).toBe(-5);
+    expect(sectionTimeState.positiveTime).toBe(15);
+    expect(sectionTimeState.negativeTime).toBe(-5);
     expect(sectionTimeState.inTime).toBe(15);
-    expect(sectionTimeState.status).toBe(TimeStatus.AfterEnd);
+    expect(sectionTimeState.inPosition).toBe(
+      RelativeAxisRangePosition.GreaterThanEndBound
+    );
   });
 
-  test(`when time direction is left and time is left of bounds`, () => {
+  // time direction is negative
+
+  test(`when time direction is negative and time is less than bounds`, () => {
     const sectionDatas: SectionData = {
-      leftBoundTime: 10,
-      rightBoundTime: 20,
+      minimumBoundTime: 10,
+      maximumBoundTime: 20,
     };
 
     const sectionTimeState = SectionTimeState.create(
       sectionDatas,
       5,
-      TimeDirection.Left
+      AxisDirection.Negative
     );
 
-    expect(sectionTimeState.leftTime).toBe(-5);
-    expect(sectionTimeState.rightTime).toBe(15);
+    expect(sectionTimeState.positiveTime).toBe(-5);
+    expect(sectionTimeState.negativeTime).toBe(15);
     expect(sectionTimeState.inTime).toBe(15);
-    expect(sectionTimeState.status).toBe(TimeStatus.AfterEnd);
+    expect(sectionTimeState.inPosition).toBe(
+      RelativeAxisRangePosition.GreaterThanEndBound
+    );
   });
 
-  test(`when time direction is left and time is at left bound`, () => {
+  test(`when time direction is negative and time is at minimum bound`, () => {
     const sectionDatas: SectionData = {
-      leftBoundTime: 10,
-      rightBoundTime: 20,
+      minimumBoundTime: 10,
+      maximumBoundTime: 20,
     };
 
     const sectionTimeState = SectionTimeState.create(
       sectionDatas,
       10,
-      TimeDirection.Left
+      AxisDirection.Negative
     );
 
-    expect(sectionTimeState.leftTime).toBe(0);
-    expect(sectionTimeState.rightTime).toBe(10);
+    expect(sectionTimeState.positiveTime).toBe(0);
+    expect(sectionTimeState.negativeTime).toBe(10);
     expect(sectionTimeState.inTime).toBe(10);
-    expect(sectionTimeState.status).toBe(TimeStatus.In);
+    expect(sectionTimeState.inPosition).toBe(
+      RelativeAxisRangePosition.EqualToEndBound
+    );
   });
 
-  test(`when time direction is left and time is between bounds`, () => {
+  test(`when time direction is negative and time is between bounds`, () => {
     const sectionDatas: SectionData = {
-      leftBoundTime: 10,
-      rightBoundTime: 20,
+      minimumBoundTime: 10,
+      maximumBoundTime: 20,
     };
 
     const sectionTimeState = SectionTimeState.create(
       sectionDatas,
       12,
-      TimeDirection.Left
+      AxisDirection.Negative
     );
 
-    expect(sectionTimeState.leftTime).toBe(2);
-    expect(sectionTimeState.rightTime).toBe(8);
+    expect(sectionTimeState.positiveTime).toBe(2);
+    expect(sectionTimeState.negativeTime).toBe(8);
     expect(sectionTimeState.inTime).toBe(8);
-    expect(sectionTimeState.status).toBe(TimeStatus.In);
+    expect(sectionTimeState.inPosition).toBe(RelativeAxisRangePosition.Between);
   });
 
-  test(`when time direction is left and time is at right bound`, () => {
+  test(`when time direction is negative and time is at maximum bound`, () => {
     const sectionDatas: SectionData = {
-      leftBoundTime: 10,
-      rightBoundTime: 20,
+      minimumBoundTime: 10,
+      maximumBoundTime: 20,
     };
 
     const sectionTimeState = SectionTimeState.create(
       sectionDatas,
       20,
-      TimeDirection.Left
+      AxisDirection.Negative
     );
 
-    expect(sectionTimeState.leftTime).toBe(10);
-    expect(sectionTimeState.rightTime).toBe(0);
+    expect(sectionTimeState.positiveTime).toBe(10);
+    expect(sectionTimeState.negativeTime).toBe(0);
     expect(sectionTimeState.inTime).toBe(0);
-    expect(sectionTimeState.status).toBe(TimeStatus.In);
+    expect(sectionTimeState.inPosition).toBe(
+      RelativeAxisRangePosition.EqualToStartBound
+    );
   });
 
-  test(`when time direction is left and time is right of bounds`, () => {
+  test(`when time direction is negative and time is right of bounds`, () => {
     const sectionDatas: SectionData = {
-      leftBoundTime: 10,
-      rightBoundTime: 20,
+      minimumBoundTime: 10,
+      maximumBoundTime: 20,
     };
 
     const sectionTimeState = SectionTimeState.create(
       sectionDatas,
       25,
-      TimeDirection.Left
+      AxisDirection.Negative
     );
 
-    expect(sectionTimeState.leftTime).toBe(15);
-    expect(sectionTimeState.rightTime).toBe(-5);
+    expect(sectionTimeState.positiveTime).toBe(15);
+    expect(sectionTimeState.negativeTime).toBe(-5);
     expect(sectionTimeState.inTime).toBe(-5);
-    expect(sectionTimeState.status).toBe(TimeStatus.BeforeStart);
+    expect(sectionTimeState.inPosition).toBe(
+      RelativeAxisRangePosition.LessThanStartBound
+    );
   });
 });

@@ -7,14 +7,14 @@ import {
   type Store,
 } from "solid-js/store";
 //
-import { Point2dFloat64, Float64 } from "@negabyte-studios/lib-math";
-import type { EntityCollection, EntityId } from "@negabyte-studios/lib-entity";
 import {
-  SectionData,
-  TimeDirection,
-  TimelineState,
-  TimeStatus,
-} from "@negabyte-studios/lib-timeline";
+  Point2dFloat64,
+  Float64,
+  AxisDirection,
+  RelativeAxisRangePosition,
+} from "@negabyte-studios/lib-math";
+import type { EntityCollection, EntityId } from "@negabyte-studios/lib-entity";
+import { SectionData, TimelineState } from "@negabyte-studios/lib-timeline";
 
 /**
  * State of a character entity in the graphics world.
@@ -139,23 +139,23 @@ const AnimateTransformExampleRoute: Component = () => {
 
     const timelineSectionDatas = [
       {
-        leftBoundTime: 1000,
-        rightBoundTime: 2000,
+        minimumBoundTime: 1000,
+        maximumBoundTime: 2000,
       },
       {
-        leftBoundTime: 1250,
-        rightBoundTime: 2250,
+        minimumBoundTime: 1250,
+        maximumBoundTime: 2250,
       },
       {
-        leftBoundTime: 3000,
-        rightBoundTime: 3500,
+        minimumBoundTime: 3000,
+        maximumBoundTime: 3500,
       },
     ] satisfies ReadonlyArray<SectionData>;
 
     const firstTimelineState = TimelineState.create(
       timelineSectionDatas,
       0,
-      TimeDirection.Right
+      AxisDirection.Positive
     );
 
     const graphicsWorld = GraphicsWorld.create(graphicsWorldResources, {
@@ -214,7 +214,7 @@ const AnimateTransformExampleRoute: Component = () => {
       const nextTimelineState = TimelineState.create(
         timelineSectionDatas,
         graphicsWorld.store.timelineState.time + 1000 / 60,
-        TimeDirection.Right
+        AxisDirection.Positive
       );
 
       // render using next timeline state
@@ -233,8 +233,8 @@ const AnimateTransformExampleRoute: Component = () => {
               timelineSectionDatas[iTaskEntityState.targetTimelineSectionIndex];
 
             if (
-              iTaskTargetTimelineSectionState.timeState.status ===
-              TimeStatus.BeforeStart
+              iTaskTargetTimelineSectionState.timeState.inPosition ===
+              RelativeAxisRangePosition.LessThanStartBound
             ) {
               continue;
             }
@@ -242,8 +242,8 @@ const AnimateTransformExampleRoute: Component = () => {
             const iNextTaskTimelineSectionProgress = Float64.clamp(
               Float64.getProgress(
                 nextTimelineState.time,
-                iTaskTargetTimelineSectionDatas.leftBoundTime,
-                iTaskTargetTimelineSectionDatas.rightBoundTime
+                iTaskTargetTimelineSectionDatas.minimumBoundTime,
+                iTaskTargetTimelineSectionDatas.maximumBoundTime
               ),
               0,
               1.0
@@ -280,7 +280,9 @@ const AnimateTransformExampleRoute: Component = () => {
       // timeline is over, do not update any more
       if (
         nextTimelineState.sectionStates.every(
-          (i) => i.timeState.status === TimeStatus.AfterEnd
+          (i) =>
+            i.timeState.inPosition ===
+            RelativeAxisRangePosition.GreaterThanEndBound
         )
       ) {
         return;

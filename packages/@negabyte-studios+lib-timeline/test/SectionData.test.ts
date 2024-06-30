@@ -8,8 +8,8 @@ describe(SectionData.validate.name, () => {
   it("throws when startTime is NaN ", () => {
     expect(() =>
       SectionData.validate({
-        leftBoundTime: Number.NaN,
-        rightBoundTime: 0,
+        minimumBoundTime: Number.NaN,
+        maximumBoundTime: 0,
       })
     ).toThrow();
   });
@@ -17,8 +17,8 @@ describe(SectionData.validate.name, () => {
   it("throws when endTime is NaN ", () => {
     expect(() =>
       SectionData.validate({
-        leftBoundTime: 0,
-        rightBoundTime: Number.NaN,
+        minimumBoundTime: 0,
+        maximumBoundTime: Number.NaN,
       })
     ).toBeDefined();
   });
@@ -26,8 +26,8 @@ describe(SectionData.validate.name, () => {
   it("throws when startTime is Number.POSITIVE_INFINITY ", () => {
     expect(() =>
       SectionData.validate({
-        leftBoundTime: Number.POSITIVE_INFINITY,
-        rightBoundTime: 0,
+        minimumBoundTime: Number.POSITIVE_INFINITY,
+        maximumBoundTime: 0,
       })
     ).toBeDefined();
   });
@@ -35,8 +35,8 @@ describe(SectionData.validate.name, () => {
   it("throws when startTime is Number.NEGATIVE_INFINITY ", () => {
     expect(() =>
       SectionData.validate({
-        leftBoundTime: Number.NEGATIVE_INFINITY,
-        rightBoundTime: 0,
+        minimumBoundTime: Number.NEGATIVE_INFINITY,
+        maximumBoundTime: 0,
       })
     ).toBeDefined();
   });
@@ -44,8 +44,8 @@ describe(SectionData.validate.name, () => {
   it("throws when endTime is Number.POSITIVE_INFINITY ", () => {
     expect(() =>
       SectionData.validate({
-        leftBoundTime: 0,
-        rightBoundTime: Number.POSITIVE_INFINITY,
+        minimumBoundTime: 0,
+        maximumBoundTime: Number.POSITIVE_INFINITY,
       })
     ).toBeDefined();
   });
@@ -53,8 +53,8 @@ describe(SectionData.validate.name, () => {
   it("throws when endTime is Number.NEGATIVE_INFINITY ", () => {
     expect(() =>
       SectionData.validate({
-        leftBoundTime: 0,
-        rightBoundTime: Number.NEGATIVE_INFINITY,
+        minimumBoundTime: 0,
+        maximumBoundTime: Number.NEGATIVE_INFINITY,
       })
     ).toBeDefined();
   });
@@ -62,8 +62,8 @@ describe(SectionData.validate.name, () => {
   it("throws when endTime < 0 ", () => {
     expect(() =>
       SectionData.validate({
-        leftBoundTime: 0,
-        rightBoundTime: -1,
+        minimumBoundTime: 0,
+        maximumBoundTime: -1,
       })
     ).toBeDefined();
   });
@@ -71,8 +71,8 @@ describe(SectionData.validate.name, () => {
   it("throws when startTime < 0 ", () => {
     expect(() =>
       SectionData.validate({
-        leftBoundTime: -1,
-        rightBoundTime: 0,
+        minimumBoundTime: -1,
+        maximumBoundTime: 0,
       })
     ).toBeDefined();
   });
@@ -80,8 +80,8 @@ describe(SectionData.validate.name, () => {
   it("throws when startTime > endTime ", () => {
     expect(() =>
       SectionData.validate({
-        leftBoundTime: 1,
-        rightBoundTime: 0,
+        minimumBoundTime: 1,
+        maximumBoundTime: 0,
       })
     ).toBeDefined();
   });

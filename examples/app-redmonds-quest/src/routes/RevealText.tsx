@@ -8,12 +8,11 @@ import {
 } from "solid-js/store";
 //
 import type { EntityCollection } from "@negabyte-studios/lib-entity";
+import { SectionData, TimelineState } from "@negabyte-studios/lib-timeline";
 import {
-  SectionData,
-  TimeDirection,
-  TimelineState,
-  TimeStatus,
-} from "@negabyte-studios/lib-timeline";
+  AxisDirection,
+  RelativeAxisRangePosition,
+} from "@negabyte-studios/lib-math";
 
 interface DialogBoxEntityState {
   readonly text: string;
@@ -131,15 +130,15 @@ const RevealTextExampleRoute: Component = () => {
 
     const timelineSectionDatas = [
       {
-        leftBoundTime: 60, // wait 60 frames
-        rightBoundTime: 60 + nextDialogBoxDesiredText.length, // 1 character per frame
+        minimumBoundTime: 60, // wait 60 frames
+        maximumBoundTime: 60 + nextDialogBoxDesiredText.length, // 1 character per frame
       },
     ] satisfies ReadonlyArray<SectionData>;
 
     const firstTimelineState = TimelineState.create(
       timelineSectionDatas,
       0,
-      TimeDirection.Right
+      AxisDirection.Positive
     );
 
     const graphicsWorld = GraphicsWorld.create(graphicsWorldResources, {
@@ -165,7 +164,7 @@ const RevealTextExampleRoute: Component = () => {
       const nextTimelineState = TimelineState.create(
         timelineSectionDatas,
         graphicsWorld.store.timelineState.time + 1,
-        TimeDirection.Right
+        AxisDirection.Positive
       );
 
       graphicsWorld.store.setTimelineState(nextTimelineState);
@@ -183,8 +182,8 @@ const RevealTextExampleRoute: Component = () => {
         switch (iTaskEntityState.taskType) {
           case GraphicsTaskTypeEnum.RevealTextUsingTimeline: {
             if (
-              iTaskTargetTimelineSectionState.timeState.status ===
-              TimeStatus.BeforeStart
+              iTaskTargetTimelineSectionState.timeState.inPosition ===
+              RelativeAxisRangePosition.LessThanStartBound
             ) {
               continue;
             }
@@ -213,7 +212,9 @@ const RevealTextExampleRoute: Component = () => {
       // timeline is over, do not update any more
       if (
         nextTimelineState.sectionStates.every(
-          (i) => i.timeState.status === TimeStatus.AfterEnd
+          (i) =>
+            i.timeState.inPosition ===
+            RelativeAxisRangePosition.GreaterThanEndBound
         )
       ) {
         return;
