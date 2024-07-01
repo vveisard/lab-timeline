@@ -35,35 +35,48 @@ export { AbsoluteAxisRangePosition, RelativeAxisRangePosition, AxisDirection };
 // @region-start
 
 /**
- * Data for a range of some number line.
+ * How a value in a range should behave outside of the bounds.
+ */
+enum RangeOverflowBehavior {
+  /**
+   * Outside of the range, the value will be `null`.
+   */
+  Nothing,
+  /**
+   * Outside of the range, the value will be unrestricted.
+   */
+  Free,
+  /**
+   * Outside of the range, the value will be clamped to the last value.
+   */
+  Clamp,
+  /**
+   * Outside of the range, the value will be wrapped to to the range.
+   */
+  Wrap,
+}
+
+interface RangeBoundData {
+  readonly value: Float64;
+  readonly overflowBehavior: RangeOverflowBehavior;
+}
+
+/**
+ * Data for a range of some axis.
  */
 interface RangeData {
   /**
    * bound of the range the negative direction of an axis.
    */
-  readonly minimumBound: Float64;
+  readonly minimumBound: RangeBoundData;
 
   /**
    * bound of the range the positive direction of an axis.
    */
-  readonly maximumBound: Float64;
+  readonly maximumBound: RangeBoundData;
 }
 
 namespace RangeData {
-  /**
-   * Get the amount a value is in a range, in the positive direction, measured from the minimum bound.
-   */
-  export function getPositiveIn(self: RangeData, value: Float64): number {
-    return value - self.minimumBound;
-  }
-
-  /**
-   * Get the amount a value is in a range, in the negative direction, measured from the maximum bound.
-   */
-  export function getNegativeIn(self: RangeData, value: Float64): number {
-    return self.maximumBound - value;
-  }
-
   export function validate(self: RangeData, name?: string): Error | undefined {
     if (
       self.maximumBound !== undefined &&
@@ -74,11 +87,11 @@ namespace RangeData {
       );
     }
 
-    if (self.minimumBound < 0) {
+    if (self.minimumBound.value < 0) {
       return new Error(`Invalid argument! ${name}: leftBoundTime < 0`);
     }
 
-    if (self.maximumBound < 0) {
+    if (self.maximumBound.value < 0) {
       return new Error(`Invalid argument! ${name}: rightBoundTime < 0`);
     }
 
@@ -108,60 +121,7 @@ namespace RangeData {
   }
 }
 
-export { RangeData };
-
-// @region-end
-
-// @region-start
-
-/**
- * State of time for a {@link SectionState}.
- * @remarks
- * Derived state.
- */
-interface RangeState {
-  /**
-   * Position of the time relative to this range.
-   */
-  readonly position: AbsoluteAxisRangePosition;
-  /**
-   * Amount of time into the range, measured from the minimum bound of this range.
-   * Negative: time is less than the minimum bound
-   */
-  readonly inPositive: number;
-
-  /**
-   * Amount of time into the range, measured from the maximum bound of this range.
-   * Negative: time is greater than the maximum bound
-   */
-  readonly inNegative: number;
-}
-
-namespace RangeState {
-  /**
-   * Create {@link RangeState} from a {@link SectionRangeData}.
-   */
-  export function create(
-    rangeData: RangeData,
-    timelineTime: number
-  ): RangeState {
-    const positiveTime = RangeData.getPositiveIn(rangeData, timelineTime);
-    const negativeTime = RangeData.getNegativeIn(rangeData, timelineTime);
-    const position = Float64.getAbsoluteRangePosition(
-      timelineTime,
-      rangeData.minimumBound,
-      rangeData.maximumBound
-    );
-
-    return {
-      position: position,
-      inPositive: positiveTime,
-      inNegative: negativeTime,
-    };
-  }
-}
-
-export { RangeState };
+export { RangeData, RangeOverflowBehavior };
 
 // @region-end
 
@@ -171,9 +131,48 @@ type Float64 = number;
 
 namespace Float64 {
   /**
+   * Wraps value in range of [{@link rangeMinimumBound}, {@link rangeMaximumBound}).
+   */
+  export function wrapPositive(
+    value: Float64,
+    rangeMinimumBound: Float64,
+    rangeMaximumBound: Float64
+  ) {
+    const rangeSize = rangeMaximumBound - rangeMinimumBound;
+    const wrappedValue =
+      ((((value - rangeMinimumBound) % rangeSize) + rangeSize) % rangeSize) +
+      rangeMinimumBound;
+    return wrappedValue;
+  }
+
+  /**
+   * Wraps value in range of ({@link rangeMinimumBound}, {@link rangeMaximumBound}].
+   */
+  export function wrapNegative(
+    value: Float64,
+    rangeMinimumBound: Float64,
+    rangeMaximumBound: Float64
+  ) {
+    // Ensure lowerBound is exclusive
+    rangeMinimumBound = rangeMinimumBound + 1;
+
+    // Calculate the range
+    let range = rangeMaximumBound - rangeMinimumBound + 1;
+
+    // Normalize the value within the range of [0, range-1]
+    let normalized = (value - rangeMinimumBound) % range;
+    if (normalized < 0) {
+      normalized += range;
+    }
+
+    // Return the wrapped value by adding back the lowerBound
+    return normalized + rangeMinimumBound;
+  }
+
+  /**
    * Get absolute position of value in a range.
    */
-  export function getAbsoluteRangePosition(
+  export function getRangeAbsolutePosition(
     value: Float64,
     minimumRangeBound: Float64,
     maximumRangeBound: Float64
@@ -204,7 +203,7 @@ namespace Float64 {
   /**
    * Get relative position of value in a range.
    */
-  export function getRelativeRangePosition(
+  export function getRangeRelativePosition(
     value: Float64,
     minimumRangeBound: Float64,
     maximumRangeBound: Float64,
@@ -266,15 +265,166 @@ namespace Float64 {
   }
 
   /**
-   * Get the normalized progress (interpolant) between two bounds.
+   * Get the positive in amount for a value in a range.
+   * in the positive direction, measured from the minimum bound.
    */
-  export function getProgress(
+  export function getRangePositiveIn(
+    value: Float64,
+    rangeMinimumBoundValue: Float64,
+    rangeMaximumBoundValue: Float64,
+    rangeMinimumOverflowBehavior: RangeOverflowBehavior,
+    rangeMaximumOverflowBehavior: RangeOverflowBehavior
+  ): Float64 | null {
+    if (value < rangeMinimumBoundValue) {
+      switch (rangeMinimumOverflowBehavior) {
+        case RangeOverflowBehavior.Nothing:
+          return null;
+        case RangeOverflowBehavior.Free:
+          return value - rangeMinimumBoundValue;
+        case RangeOverflowBehavior.Clamp:
+          return rangeMaximumBoundValue - rangeMinimumBoundValue;
+        case RangeOverflowBehavior.Wrap:
+          return (
+            Float64.wrapPositive(
+              value,
+              rangeMinimumBoundValue,
+              rangeMaximumBoundValue
+            ) - rangeMinimumBoundValue
+          );
+        default:
+          throw new Error(`Not implemented!`);
+      }
+    }
+
+    if (value === rangeMinimumBoundValue) {
+      return 0;
+    }
+
+    if (value === rangeMaximumBoundValue) {
+      switch (rangeMaximumOverflowBehavior) {
+        case RangeOverflowBehavior.Nothing:
+        case RangeOverflowBehavior.Free:
+        case RangeOverflowBehavior.Clamp:
+          return rangeMaximumBoundValue - rangeMinimumBoundValue;
+        case RangeOverflowBehavior.Wrap:
+          return 0;
+        default:
+          throw new Error(`Not implemented!`);
+      }
+    }
+
+    if (value > rangeMaximumBoundValue) {
+      switch (rangeMaximumOverflowBehavior) {
+        case RangeOverflowBehavior.Nothing:
+          return null;
+        case RangeOverflowBehavior.Free:
+          return value - rangeMinimumBoundValue;
+        case RangeOverflowBehavior.Clamp:
+          return rangeMaximumBoundValue - rangeMinimumBoundValue;
+        case RangeOverflowBehavior.Wrap:
+          return (
+            Float64.wrapPositive(
+              value,
+              rangeMinimumBoundValue,
+              rangeMaximumBoundValue
+            ) - rangeMinimumBoundValue
+          );
+
+        default:
+          throw new Error(`Not implemented!`);
+      }
+    }
+
+    return value - rangeMinimumBoundValue;
+  }
+
+  /**
+   * Get the negative in amount for a value in a range.
+   * in the negative direction, measured from the maximum bound.
+   */
+  export function getRangeNegativeIn(
+    value: Float64,
+    rangeMinimumBoundValue: Float64,
+    rangeMaximumBoundValue: Float64,
+    rangeMinimumOverflowBehavior: RangeOverflowBehavior,
+    rangeMaximumOverflowBehavior: RangeOverflowBehavior
+  ): Float64 | null {
+    if (value < rangeMinimumBoundValue) {
+      switch (rangeMinimumOverflowBehavior) {
+        case RangeOverflowBehavior.Nothing:
+          return null;
+        case RangeOverflowBehavior.Free:
+          return rangeMaximumBoundValue - value;
+        case RangeOverflowBehavior.Clamp:
+          return rangeMaximumBoundValue - rangeMinimumBoundValue;
+        case RangeOverflowBehavior.Wrap:
+          return (
+            rangeMaximumBoundValue -
+            Float64.wrapNegative(
+              value,
+              rangeMinimumBoundValue,
+              rangeMaximumBoundValue
+            )
+          );
+        default:
+          throw new Error(`Not implemented!`);
+      }
+    }
+
+    if (value === rangeMinimumBoundValue) {
+      return rangeMaximumBoundValue - rangeMinimumBoundValue;
+    }
+
+    if (value === rangeMaximumBoundValue) {
+      switch (rangeMaximumOverflowBehavior) {
+        case RangeOverflowBehavior.Nothing:
+        case RangeOverflowBehavior.Free:
+        case RangeOverflowBehavior.Clamp:
+          return 0;
+        case RangeOverflowBehavior.Wrap:
+          return 0;
+        default:
+          throw new Error(`Not implemented!`);
+      }
+    }
+
+    if (value > rangeMaximumBoundValue) {
+      switch (rangeMaximumOverflowBehavior) {
+        case RangeOverflowBehavior.Nothing:
+          return null;
+        case RangeOverflowBehavior.Free:
+          return rangeMaximumBoundValue - value;
+        case RangeOverflowBehavior.Clamp:
+          return rangeMaximumBoundValue - rangeMinimumBoundValue;
+        case RangeOverflowBehavior.Wrap:
+          return (
+            rangeMaximumBoundValue -
+            Float64.wrapNegative(
+              value,
+              rangeMinimumBoundValue,
+              rangeMaximumBoundValue
+            )
+          );
+        default:
+          throw new Error(`Not implemented!`);
+      }
+    }
+
+    return value - rangeMinimumBoundValue;
+  }
+
+  /**
+   * Get the normalized progress (interpolant) between two bounds.
+   * Unrestricted range of [0, 1]
+   */
+  export function getRangePositiveProgress(
     value: Float64,
     minBound: Float64,
     maxBound: Float64
   ): Float64 {
     return (value - minBound) / (maxBound - minBound);
   }
+
   export function interpolate(
     start: Float64,
     end: Float64,

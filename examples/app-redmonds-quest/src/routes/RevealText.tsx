@@ -12,6 +12,7 @@ import {
   AbsoluteAxisRangePosition,
   Float64,
   RangeData,
+  RangeOverflowBehavior,
 } from "@negabyte-studios/lib-math";
 
 interface DialogBoxEntityState {
@@ -134,8 +135,14 @@ const RevealTextExampleRoute: Component = () => {
 
     const timelineSectionRangeDatas = [
       {
-        minimumBound: 60, // wait 60 frames
-        maximumBound: 60 + nextDialogBoxDesiredText.length, // 1 character per frame
+        minimumBound: {
+          value: 60, // wait 60 frames
+          overflowBehavior: RangeOverflowBehavior.Free,
+        },
+        maximumBound: {
+          value: 60 + nextDialogBoxDesiredText.length, // 1 character per frame
+          overflowBehavior: RangeOverflowBehavior.Free,
+        },
       },
     ] satisfies ReadonlyArray<RangeData>;
 
@@ -177,10 +184,10 @@ const RevealTextExampleRoute: Component = () => {
         switch (iTaskEntityState.taskType) {
           case GraphicsTaskTypeEnum.RevealTextUsingTimeline: {
             const iTaskTimelineSectionTimePosition =
-              Float64.getAbsoluteRangePosition(
+              Float64.getRangeAbsolutePosition(
                 nextTimelineTime,
-                iTaskSectionRangeData.minimumBound,
-                iTaskSectionRangeData.maximumBound
+                iTaskSectionRangeData.minimumBound.value,
+                iTaskSectionRangeData.maximumBound.value
               );
 
             if (
@@ -190,9 +197,12 @@ const RevealTextExampleRoute: Component = () => {
               continue;
             }
 
-            const iTaskSectionPositiveTime = RangeData.getPositiveIn(
-              iTaskSectionRangeData,
-              nextTimelineTime
+            const iTaskSectionPositiveTime = Float64.getRangePositiveIn(
+              nextTimelineTime,
+              iTaskSectionRangeData.minimumBound.value,
+              iTaskSectionRangeData.maximumBound.value,
+              RangeOverflowBehavior.Free,
+              RangeOverflowBehavior.Free
             );
 
             const iTaskNextText = iTaskEntityState.desiredText.slice(

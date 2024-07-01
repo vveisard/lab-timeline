@@ -11,7 +11,8 @@ import {
   Point2dFloat64,
   Float64,
   AbsoluteAxisRangePosition,
-  type RangeData,
+  RangeData,
+  RangeOverflowBehavior,
 } from "@negabyte-studios/lib-math";
 import type { EntityCollection, EntityId } from "@negabyte-studios/lib-entity";
 
@@ -142,16 +143,34 @@ const AnimateTransformExampleRoute: Component = () => {
 
     const timelineSectionRangeDatas = [
       {
-        minimumBound: 1000,
-        maximumBound: 2000,
+        minimumBound: {
+          value: 1000,
+          overflowBehavior: RangeOverflowBehavior.Free,
+        },
+        maximumBound: {
+          value: 2000,
+          overflowBehavior: RangeOverflowBehavior.Free,
+        },
       },
       {
-        minimumBound: 1250,
-        maximumBound: 2250,
+        minimumBound: {
+          value: 1250,
+          overflowBehavior: RangeOverflowBehavior.Free,
+        },
+        maximumBound: {
+          value: 2250,
+          overflowBehavior: RangeOverflowBehavior.Free,
+        },
       },
       {
-        minimumBound: 3000,
-        maximumBound: 3500,
+        minimumBound: {
+          value: 3000,
+          overflowBehavior: RangeOverflowBehavior.Free,
+        },
+        maximumBound: {
+          value: 3500,
+          overflowBehavior: RangeOverflowBehavior.Free,
+        },
       },
     ] satisfies ReadonlyArray<RangeData>;
 
@@ -227,10 +246,10 @@ const AnimateTransformExampleRoute: Component = () => {
         switch (iTaskEntityState.taskType) {
           case GraphicsTaskTypeEnum.AnimateCharacterPositionUsingTimeline: {
             const iTaskTimelineSectionPosition =
-              Float64.getAbsoluteRangePosition(
+              Float64.getRangeAbsolutePosition(
                 nextTimelineTime,
-                iTaskSectionRangeData.minimumBound,
-                iTaskSectionRangeData.maximumBound
+                iTaskSectionRangeData.minimumBound.value,
+                iTaskSectionRangeData.maximumBound.value
               );
 
             if (
@@ -242,10 +261,10 @@ const AnimateTransformExampleRoute: Component = () => {
 
             const iNextTaskTimelineSectionTimeProgress = Float64.clamp(
               // TODO replace this with "remap" function
-              Float64.getProgress(
+              Float64.getRangePositiveProgress(
                 nextTimelineTime,
-                iTaskSectionRangeData.minimumBound,
-                iTaskSectionRangeData.maximumBound
+                iTaskSectionRangeData.minimumBound.value,
+                iTaskSectionRangeData.maximumBound.value
               ),
               0,
               1.0
